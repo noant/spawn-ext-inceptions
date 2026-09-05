@@ -1,0 +1,6 @@
+# Spawn navigation (local)
+
+read-required:
+  - ext:
+      hints:
+        - "Draft-процесс авторинга inceptions/main.md: сначала draft/v_ru.md, затем перевод в draft/v_en.md, после валидации — в inceptions/main.md."
