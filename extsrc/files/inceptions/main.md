@@ -150,6 +150,13 @@ Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
 - `inc-engineer` aggregates lists from child subagents and passes the full set to the user.
 - Do not drop or shorten paths.
 
+### inc-rule-navigate
+- After completing a task or subtask — navigate the user to the relevant files (created/changed) via the platform navigate tool.
+- Navigate to every created or changed file, with a short description (chip label) per file.
+- Use line ranges (`from_line`/`to_line`) to point to the exact changed region when relevant.
+- For git files pass the git session id; for ws docs omit it.
+- Do not use the navigate tool to read file contents — only to show files in the UI.
+
 ### inc-rule-paths
 - Under `inceptions/` only paths defined by the storage structure are allowed.
 - Allowed: inception folders `{N}-{inception-slug}/`, attempt folders `try-{N}-{Level}-{description}/`, the attempt's research folder `res/` with research files of role subagents.
@@ -177,6 +184,18 @@ Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
 - A rule is extracted at the closing stage (Stage 5) and when updating documentation.
 - Rule file format: short description + executable items (what to do/not do), following the pattern of rules in this document.
 - After writing rules to `spawn/rules/` — call `spawn refresh` to re-render skills and update `spawn/navigation.yaml`.
+
+### inc-rule-synthesis
+- When the user's request involves another methodology/skill/instruction that can be run in synthesis with inceptions (e.g., `spec/main.md`, another Spawn extension, a team skill) — detect it at Stage 0 (Entry) when classifying the request.
+- If no other methodology/skill is detected — skip the synthesis step entirely (no-op); continue the normal stage flow.
+- If one is detected — offer the user (via `inc-rule-ask`) to form synchronous work with it. Do not impose; the user decides.
+- If several are detected — ask the user which single methodology to run the synthesis with (not with all at once).
+- Exception: if the detected methodology is inceptions itself (self-synthesis), do not offer synthesis, skip the step.
+- Upon agreement — launch an `inc-executor` subagent that writes the joint-work instruction file (see the "Synchronous work with another methodology" algorithm below).
+- The joint-work instruction maps inceptions stages/steps to the steps of the other methodology, so that both can be run together consistently.
+- Store the instruction in `spawn/rules/` (see naming below), then call `spawn refresh` (as in `inc-rule-extract`).
+- The file is registered in `spawn/navigation.yaml` under `read-contextual` and is read when the two methodologies are used simultaneously.
+- Do not create a joint-work instruction for a methodology already covered by an existing file in `spawn/rules/` — reuse it (reuse-check).
 
 ### inc-rule-attempt-naming
 - Attempt name: `try-{N}-{Level}-{description}`, where `{Level}` ∈ {Low, Medium, High, New}.
@@ -316,6 +335,27 @@ Engineer (inc-engineer)
         - analyze the artifact, show the user, rename the attempt, fill motivation.md
 ```
 
+## Synchronous work with another methodology (optional step, inc-rule-synthesis)
+
+Launched from Stage 0 (Entry), when the request involves another methodology/skill/instruction compatible with inceptions. Skipped entirely when none is detected.
+
+S0. **Detection (Stage 0)** — when classifying the request, check whether it refers to another methodology/skill/instruction (`spec/main.md`, another Spawn extension, a team skill, an instruction file) that can be run together with inceptions.
+   - nothing detected → skip; continue the normal flow (this step is a no-op).
+   - inceptions itself detected (self-synthesis) → skip; continue the normal flow.
+   - several methodologies detected → go to S1 and ask which single one to run.
+S1. **Offer (inc-rule-ask)** — if one methodology is detected, ask the user whether to form synchronous work with it.
+   - user declined → skip; continue the normal flow.
+   - several detected → ask which single methodology to run the synthesis with.
+S2. **Preparation** — determine the source of the target methodology (path to its main.md / skill / instruction) and its list of steps. Agree on the joint-work file name (see naming below) with the user.
+S3. **Launch the executor** — launch an `inc-executor` subagent (`inc-rule-subagent-launch`, `inc-rule-ambient`, `inc-rule-model-line`) with the task: read inceptions/main.md and the target methodology, then write a joint-work instruction file mapping inceptions stages/steps → steps of the target methodology.
+S4. **Writing** — the executor writes the file to `spawn/rules/` (see naming below) and reports the path (`inc-rule-changed-files`).
+S5. **Update** — call `spawn refresh` (as in `inc-rule-extract`), so the file is registered in `spawn/navigation.yaml` under `read-contextual` → rules.
+S6. **Usage** — when both methodologies run simultaneously, read the joint-work instruction (it is now in `read-contextual`) and follow the step mapping; the engineer coordinates both flows.
+
+**Joint-work instruction file naming:** `spawn/rules/synthesis-{methodology-slug}.md`, where `{methodology-slug}` — short slug of the other methodology/skill (e.g., `spectask`, `mempalace`, `team-code-review`). Example: `spawn/rules/synthesis-spectask.md`. The scheme does not overlap with the extracted-rule naming `{SLUG}-{N}-{description}`.
+
+**File content (template):** header `# Synthesis: inceptions <-> {methodology}`; short description (read when both methodologies are used simultaneously); step mapping table `| inceptions stage/step | {methodology} step | who leads | notes |`; coordination rules (how the engineer alternates the two flows, which artifacts are shared and where they live, conflict resolution, when both methodologies define a step); source (Inception 3, attempt try-1-High-synthesis-step).
+
 ## Detailed stage description
 
 ### Stage 0: Entry (user request)
@@ -329,6 +369,7 @@ The engineer accepts the user request and classifies it:
 
 **What the engineer does:**
 
+0.0 **Synthesis check (inc-rule-synthesis)** — if the request involves another methodology/skill/instruction, offer to form synchronous work with it (see "Synchronous work with another methodology"). If none detected — skip.
 1. Determines the user's language (`inc-rule-language`): if unambiguous — work in it; if ambiguous — offer a set of languages via `inc-rule-ask`.
 2. Determines the request type (A or B).
 3. If something is unclear — asks the user basic clarification and waits for the answer.
@@ -347,6 +388,8 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer`
 
 **What the engineer does:**
+
+1.0 **Synthesis check (inc-rule-synthesis)** — if the question involves another methodology/skill, offer synchronous work; if none detected — skip.
 
 1.1 **Clarification** — if something is unclear, ask the user basic clarification and wait for the answer.
 
@@ -374,6 +417,8 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer` (coordination), `inc-explorer` (research), `inc-reviewer` (review)
 
 **What the engineer does:**
+
+2.0 **Synthesis check (inc-rule-synthesis)** — if the initiative involves another methodology/skill, offer synchronous work; if none detected — skip.
 
 2.1 **Initiative clarification** — clarify the user's initiative, ask for motivation, ask necessary questions (`inc-rule-ask`: ask the user, not subagents).
 
@@ -426,6 +471,8 @@ The engineer accepts the user request and classifies it:
 
 **What the engineer does:**
 
+3.0 **Synthesis check (inc-rule-synthesis)** — if the task involves another methodology/skill, ensure the joint-work instruction is available and applied; if none detected — skip.
+
 3.1 **Spec formation** — based on the research, form the high-level technical task in the attempt's `technical-task.md`.
 
 3.2 **Subtask formation** — form subtasks for executor subagents (`inc-executor`).
@@ -456,6 +503,8 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer` (coordination), `inc-executor` (execution), `inc-reviewer` (review)
 
 **What the engineer does:**
+
+4.0 **Synthesis check (inc-rule-synthesis)** — if executing together with another methodology/skill, follow the joint-work instruction's step mapping; if none detected — skip.
 
 4.1 **Execution mode selection** — ask the user how to execute the task (`inc-rule-ask`). Offer 4 options with codes:
    - **[A] automatic** — execute automatically by the scheme with subagents (`inc-executor` by `## Execution scheme`). **Default mode** — preferred for this methodology;
@@ -489,6 +538,8 @@ The engineer accepts the user request and classifies it:
 
 **What the engineer does:**
 
+4a.0 **Synthesis check (inc-rule-synthesis)** — if a joint-work instruction was created, keep it in sync with any methodology changes; if none — skip.
+
 4a.1 **Rules extract** — extract rules from the completed work (`inc-rule-extract`). Extracted rules are NOT `inc-rule-{slug}` (internal methodology rules), but rules extracted from a specific inception while working with the user.
 
 4a.2 **Saving rules** — save each rule to a file `spawn/rules/{SLUG}-{N}-{description}.md` — one rule per file (`inc-rule-extract`). The file name and rule composition are refined while working with the user. After writing — call `spawn refresh` to re-render skills.
@@ -504,6 +555,8 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer`
 
 **What the engineer does:**
+
+5.0 **Synthesis check (inc-rule-synthesis)** — if synchronous work was used, note in the final report how the two methodologies interleaved; if none — skip.
 
 5.1 **Artifact analysis** — analyze the obtained work artifact.
 
