@@ -11,16 +11,16 @@
 - [ ] Documentation update & rules extract [model]
 
 ## Goal
-{Одна фраза — цель попытки.}
+{One phrase — the attempt's goal.}
 
 ## Motivation
-{Почему эта попытка, что пробуем достичь.}
+{Why this attempt, what we are trying to achieve.}
 
 ## Research summary
-{Синтез результатов исследований — что выяснили. Ссылки на файлы исследований в res/: res/{task-descr-slug}.{agent-slug}.md.}
+{Synthesis of research results — what was found. Links to research files in res/: res/{task-descr-slug}.{agent-slug}.md.}
 
 ## Technical task
-{Ссылка на файл technical-task.md — верхнеуровневое ТЗ, задачи, режим выполнения.}
+{Link to the technical-task.md file — high-level spec, tasks, execution mode.}
 
 ## Result
-{Ссылка на файл result.md — итог попытки и заметки.}
+{Link to the result.md file — attempt outcome and notes.}

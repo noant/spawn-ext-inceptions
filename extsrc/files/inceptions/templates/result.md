@@ -1,7 +1,7 @@
 # Result: try-{N}-{Level} — {Title}
 
 ## Result
-{Итог попытки: успех / неуспех, причины, проблемы.}
+{Attempt outcome: success / failure, reasons, problems.}
 
 ## Notes
-{Дополнительные заметки, контекст для следующей попытки.}
+{Additional notes, context for the next attempt.}

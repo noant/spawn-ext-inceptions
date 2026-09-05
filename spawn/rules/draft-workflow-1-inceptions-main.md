@@ -1,16 +1,16 @@
 # draft-workflow-1-inceptions-main
 
 ## Description
-Локальное правило авторинга методологии inceptions в этом репозитории. Регулирует порядок внесения изменений в `inceptions/main.md` через черновики с переводом.
+Local authoring rule for the inceptions methodology in this repository. Governs the order of changes to `inceptions/main.md` through drafts with translation.
 
 ## Rules
-- Вначале работаем только в `draft/v_ru.md` (русская версия).
-- Затем переносим переводом на английский в `draft/v_en.md`.
-- Только после валидации файла переносим в `inceptions/main.md`.
-- Не редактировать `inceptions/main.md` напрямую, минуя draft-процесс.
+- First work only in `draft/v_ru.md` (Russian version).
+- Then move it by translation into English in `draft/v_en.md`.
+- Only after validation of the file move it into `inceptions/main.md`.
+- Do not edit `inceptions/main.md` directly, bypassing the draft process.
 
 ## When to apply
-При любом изменении методологии `inceptions/main.md` в этом репозитории.
+On any change to the `inceptions/main.md` methodology in this repository.
 
 ## Source
-Локальное правило spawn для репозитория inceptions-methodology.
+Local spawn rule for the inceptions-methodology repository.

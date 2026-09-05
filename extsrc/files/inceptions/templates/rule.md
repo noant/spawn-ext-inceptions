@@ -1,14 +1,14 @@
 # {SLUG}-{N}-{description}
 
 ## Description
-{Краткое описание правила — что оно регулирует.}
+{Short description of the rule — what it governs.}
 
 ## Rules
-- {исполняемый пункт — что делать/не делать.}
-- {исполняемый пункт.}
+- {executable item — what to do/not do.}
+- {executable item.}
 
 ## When to apply
-{Когда применять правило.}
+{When to apply the rule.}
 
 ## Source
-{Откуда извлечено: начинание, попытка, контекст.}
+{Where it was extracted from: inception, attempt, context.}

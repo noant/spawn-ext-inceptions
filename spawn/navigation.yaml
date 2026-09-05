@@ -3,4 +3,4 @@
 read-required:
   - ext:
       hints:
-        - "Draft-процесс авторинга inceptions/main.md: сначала draft/v_ru.md, затем перевод в draft/v_en.md, после валидации — в inceptions/main.md."
+        - "Draft authoring process for inceptions/main.md: first draft/v_ru.md, then translate to draft/v_en.md, after validation — into inceptions/main.md."
