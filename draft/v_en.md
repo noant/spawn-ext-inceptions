@@ -106,6 +106,7 @@ Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
 - "Ask" / "request from the user" means only these channels.
 - **Never** interpret "ask" as launching a Task / subagent / another agent — these tools are not ask tools.
 - If there is no platform ask tool — stop, ask the user, then wait.
+- **Do not ask when the answer is already clear from context.** Ask only when the answer materially changes the next action. If the request is unambiguous and the next step (launch a researcher, create files, choose a mode) is determined — proceed without asking.
 
 ### inc-rule-subagent-launch
 - Each subagent launch is performed with an explicit role: `inc-explorer`, `inc-researcher`, `inc-executor`, `inc-reviewer`.
@@ -297,9 +298,9 @@ Engineer (inc-engineer)
         v
   EXECUTION STAGE
         - engineer asks how to execute the task (4 options):
-            * [A] automatic — automatically by the scheme with subagents
+            * [A] automatic — automatically by the scheme with subagents (default)
             * [B] step by step — sequentially with confirmation of each step
-            * [C] inline — without subagents, the engineer does it in the chat (risk of hallucinations)
+            * [C] inline — without subagents, the engineer does it in the chat (risk of hallucinations; anti-pattern)
             * [D] show task details — first show details, then choose the mode
         - execution
         - reviewer reviews the completed work
@@ -378,19 +379,34 @@ The engineer accepts the user request and classifies it:
 
 2.1 **Initiative clarification** — clarify the user's initiative, ask for motivation, ask necessary questions (`inc-rule-ask`: ask the user, not subagents).
 
-2.2 **File creation** — create necessary files by templates (`inc-rule-paths`):
+2.2 **Base documentation creation (mandatory, before any research)** — create the attempt's base documentation by templates (`inc-rule-paths`). This step MUST be done before launching any researcher:
    - if first attempt of first inception — create the folder `inceptions/{N}-{inception-slug}/` and `motivation.md`;
-   - create the attempt folder `try-{N}-New-{description}/`, `overview.md` (`inc-rule-attempt-naming`) and the research folder `res/` (`inc-rule-res-file`).
+   - create the attempt folder `try-{N}-New-{description}/` (`inc-rule-attempt-naming`);
+   - create `overview.md` (statuses, goal, motivation — strict template);
+   - create the research folder `res/` (`inc-rule-res-file`).
+   - **Checklist (all must be created before research starts):** `motivation.md` (first attempt), `try-{N}-New-{description}/`, `overview.md`, `res/`. If any is missing — stop and create it; do not launch researchers without the base documentation in place.
 
-2.3 **Launching researchers** — launch researcher agents (`inc-explorer` or `inc-researcher`), set directions and agent slugs (`inc-rule-agent-slug`). Each researcher writes the full research to the attempt's file `res/{task-descr-slug}.{agent-slug}.md` and attaches a link to the file in the report (`inc-rule-res-file`). Launch by `inc-rule-subagent-launch`, `inc-rule-subagent-depth`, `inc-rule-ambient`, `inc-rule-model-line`.
+2.3 **Research depth selection** — ask the user the research depth (`inc-rule-ask`). Three modes:
+   - **[inline]** — the engineer researches in the chat without subagents (for trivial, one-off questions);
+   - **[medium]** — launch a single `inc-explorer` (or `inc-researcher` for a narrow single-line question);
+   - **[high]** — launch several directed `inc-explorer` subagents, each with its own direction line (decomposition into independent lines).
+   - If the user does not specify — default to **[medium]** (single explorer).
 
-2.4 **Documentation formation** — form the attempt documentation folder, create the research results file (Research summary in `overview.md`) with links to research files in `res/`.
+2.4 **Research loop (explorer-driven)** — the engineer runs the research in a loop. Each iteration:
 
-2.5 **Research waves** — there can be several research cycles, up to 3 waves:
-   - **Wave 1:** researchers form base artifacts → launch a subagent with role `inc-reviewer` to review the results (`inc-rule-subagent-launch`) → engineer analyzes the artifacts.
-   - **Wave 2..3:** researchers refine by specific clarifications or errors found by the reviewer/engineer.
+   2.4.1 **Decompose** — split the research into independent direction lines (for `high` depth — several lines; for `medium` — one line). Assign each line an agent slug (`inc-rule-agent-slug`).
 
-2.6 **Continuation proposal** — at the end propose:
+   2.4.2 **Launch** — launch `inc-explorer` (or `inc-researcher`) subagents, one per line, by the "Direction line template" (`inc-rule-subagent-launch`, `inc-rule-subagent-depth`, `inc-rule-ambient`, `inc-rule-model-line`). Each researcher writes the full research to the attempt's file `res/{task-descr-slug}.{agent-slug}.md` and attaches a link in the report (`inc-rule-res-file`).
+
+   2.4.3 **Collect** — collect the research files from `res/`, synthesize the results into the Research summary in `overview.md` (with links to the files).
+
+   2.4.4 **Review** — launch a subagent with role `inc-reviewer` to review the results (`inc-rule-subagent-launch`). The engineer analyzes the artifacts.
+
+   2.4.5 **Decide** — based on the review:
+   - gaps remain → run another wave (up to 3 waves total): refine by specific clarifications/errors, go back to 2.4.1;
+   - research complete → proceed to 2.5.
+
+2.5 **Continuation proposal** — at the end propose:
    - move to Stage 3 (Task creation);
    - OR move to a separate chat with the prompt `{prompt}` (the engineer forms a ready prompt for a new chat);
    - OR create a subagent to continue working on Stage 3 (Task creation) — launch a subagent with role `inc-engineer` (`inc-rule-subagent-launch`), the subagent receives the research context and continues forming tasks.
@@ -444,10 +460,12 @@ The engineer accepts the user request and classifies it:
 **What the engineer does:**
 
 4.1 **Execution mode selection** — ask the user how to execute the task (`inc-rule-ask`). Offer 4 options with codes:
-   - **[A] automatic** — execute automatically by the scheme with subagents (`inc-executor` by `## Execution scheme`);
+   - **[A] automatic** — execute automatically by the scheme with subagents (`inc-executor` by `## Execution scheme`). **Default mode** — preferred for this methodology;
    - **[B] step by step** — sequentially, asking the user for permission to move to the next step;
-   - **[C] inline** — execute without subagents (the engineer does it in the chat; higher risk of hallucinations since there is no independent check);
+   - **[C] inline** — execute without subagents (the engineer does it in the chat; higher risk of hallucinations since there is no independent check). **Anti-pattern for this methodology** — use only when the user explicitly insists or the task is trivial;
    - **[D] show task details** — first show task details in the chat, then choose the mode.
+
+   If the user does not specify a mode — default to **[A] automatic** (do not silently fall back to inline).
 
 4.2 **Execution** — execute the task in the chosen mode. In automatic mode — follow `## Execution scheme` from `technical-task.md`: launch subagents with role `inc-executor` by `inc-rule-subagent-launch`, observing sequential (→) and parallel (||) phases.
 

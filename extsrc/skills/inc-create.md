@@ -33,9 +33,24 @@ Classifies the user request and, if necessary, creates an inception and an attem
 5. If the request relates to an existing inception in `inceptions/` — propose to continue working with it (use `inc-continue` to determine where to continue).
 6. For a type B request — move to Stage 2 (Research):
    - clarify the initiative, ask for motivation;
-   - if first attempt of first inception — create `inceptions/{N}-{inception-slug}/` and `motivation.md`;
-   - create the attempt folder `try-{N}-New-{description}/`, `overview.md`, `res/`.
-7. For a type A request — move to Stage 1 (Question).
+   - **create the base documentation first** (Stage 2.2, mandatory before any research):
+     - if first attempt of first inception — create `inceptions/{N}-{inception-slug}/` and `motivation.md`;
+     - create the attempt folder `try-{N}-New-{description}/`, `overview.md`, `res/`;
+     - **checklist:** `motivation.md` (first attempt), `try-{N}-New-{description}/`, `overview.md`, `res/` — all must exist before research starts;
+   - ask the research depth (Stage 2.3): `[inline]` / `[medium]` (single explorer) / `[high]` (several directed explorers); default `[medium]`;
+   - **launch researcher subagents** per the chosen depth (Stage 2.4).
+7. For a type A request — move to Stage 1 (Question):
+   - **launch a researcher subagent** (`inc-explorer` or `inc-researcher`) to answer the question (Stage 1.3).
+
+## Launching a researcher subagent (mandatory step)
+
+When the request reaches a point that needs research (type A — answering the question; type B — the research loop), launch a subagent via the task tool:
+
+- Use `inc-explorer` when the research decomposes into several independent lines (parallel/sequential sub-lines).
+- Use `inc-researcher` when the research is narrow and single-line.
+- Use inline (no subagent) only for one-off simple operations where launching a subagent is excessive.
+
+Build the subagent prompt by the "Direction line template" from `inceptions/main.md` (role, agent slug, question, hypotheses, sources, constraints, research file). Put the resolved Ambient block at the start of the prompt.
 
 ## Researcher selection (preference)
 
