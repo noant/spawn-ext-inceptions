@@ -1,25 +1,26 @@
 # spawn-ext-inceptions
 
-Spawn-расширение `inceptions-method` — методология менеджера субагентов (inception-manager).
+Spawn extension `inceptions-method` — subagent manager methodology (inception-manager).
 
-## Что это
+## What it is
 
-Методология инструктирует LLM работать как менеджер субагентов для решения задач. Основной чат — агент Инженер (inc-engineer). Пользователь взаимодействует только с ним.
+The methodology instructs the LLM to work as a subagent manager to solve tasks. The main chat is the Engineer agent (inc-engineer). The user interacts only with it.
 
-## Состав расширения
+## Extension composition
 
-- `extsrc/skills/inception-manager.md` — скилл (тонкая обёртка, ссылается на методологию).
-- `extsrc/files/inceptions/main.md` — полная методология (роли, правила, процесс, шаблоны).
-- `extsrc/files/inceptions/templates/` — шаблоны артефактов (motivation, overview, technical-task, result, rule, agent-responses).
-- Извлечённые правила начинаний хранятся в `spawn/rules/` (artifact, стандартный механизм Spawn).
+- `extsrc/skills/inc-create.md` — entry point skill (request classification, language detection, inception/attempt creation).
+- `extsrc/skills/inc-continue.md` — determines where to continue work within an existing inception.
+- `extsrc/files/inceptions/main.md` — full methodology (roles, rules, process, templates).
+- `extsrc/files/inceptions/templates/` — artifact templates (motivation, overview, technical-task, result, rule, agent-responses).
+- Extracted inception rules are stored in `spawn/rules/` (artifact, standard Spawn mechanism).
 
-## Установка
+## Installation
 
 ```bash
 spawn extension add <path-or-url>
 ```
 
-## Авторинг
+## Authoring
 
-- `spawn extension check . --strict` — валидация.
-- При изменении упаковки — бамп `version` в `extsrc/config.yaml` (см. `spawn-ext-increment-version`).
+- `spawn extension check . --strict` — validation.
+- When changing the packaging — bump `version` in `extsrc/config.yaml` (see `spawn-ext-increment-version`).

@@ -1,46 +1,49 @@
 ---
 name: inc-create
-description: Точка входа методологии inceptions. Классификация запроса (вопрос/инициатива), кларификация, создание начинания и попытки (motivation.md, overview.md, res/).
+description: Entry point of the inceptions methodology. Request classification (question/initiative), language detection, clarification, creation of inception and attempt (motivation.md, overview.md, res/).
 ---
 
 # inc-create
 
-Точка входа методологии inceptions. Роль: `inc-engineer` (основной чат).
+Entry point of the inceptions methodology. Role: `inc-engineer` (main chat).
 
-Полная методология: `inceptions/main.md`. Следуй ей.
+Full methodology: `inceptions/main.md`. Follow it.
 
-## Что делает
+## What it does
 
-Классифицирует запрос пользователя и, при необходимости, создаёт начинание и попытку.
+Classifies the user request and, if necessary, creates an inception and an attempt.
 
-## Роли, которые можно вызывать
+## Roles that can be called
 
-- `inc-explorer` — исследователь-координатор (декомпозиция исследования на линии).
-- `inc-researcher` — исследователь-исполнитель (узкое однолинейное исследование).
-- `inc-executor` — исполнитель (выполнение по ТЗ).
-- `inc-reviewer` — ревьюер (ревью исследования/задач/работы).
+- `inc-explorer` — coordinating researcher (decomposes research into lines).
+- `inc-researcher` — executing researcher (narrow single-line research).
+- `inc-executor` — executor (performs work by a spec).
+- `inc-reviewer` — reviewer (reviews research/tasks/work).
 
-## Порядок
+## Order
 
-1. Прочитать `inceptions/main.md` полностью.
-2. Классифицировать запрос (Этап 0):
-   - **[A] Вопрос** — пользователь спрашивает, а не просит «сделать».
-   - **[B] Инициатива / задача** — явный запрос «сделать» или провести исследование.
-3. Если что-то непонятно — задать кларификацию (`inc-rule-ask`).
-4. Если запрос относится к существующему начинанию в `inceptions/` — предложить продолжить работу с ним.
-5. Для запроса типа B — перейти к Этапу 2 (Исследование):
-   - кларифицировать инициативу, спросить мотивацию;
-   - если первая попытка первого начинания — создать `inceptions/{N}-{inception-slug}/` и `motivation.md`;
-   - создать папку попытки `try-{N}-New-{description}/`, `overview.md`, `res/`.
-6. Для запроса типа A — перейти к Этапу 1 (Вопрос).
+1. Read `inceptions/main.md` fully.
+2. Determine the user's language (`inc-rule-language`):
+   - If unambiguous — work in it, do not offer a choice.
+   - If ambiguous — offer a set of languages via `inc-rule-ask`, based on context.
+3. Classify the request (Stage 0):
+   - **[A] Question** — the user asks, not requests to "do".
+   - **[B] Initiative / task** — an explicit "do" request or a request to conduct research.
+4. If something is unclear — ask clarification (`inc-rule-ask`).
+5. If the request relates to an existing inception in `inceptions/` — propose to continue working with it (use `inc-continue` to determine where to continue).
+6. For a type B request — move to Stage 2 (Research):
+   - clarify the initiative, ask for motivation;
+   - if first attempt of first inception — create `inceptions/{N}-{inception-slug}/` and `motivation.md`;
+   - create the attempt folder `try-{N}-New-{description}/`, `overview.md`, `res/`.
+7. For a type A request — move to Stage 1 (Question).
 
-## Выбор исследователя (предпочтение)
+## Researcher selection (preference)
 
-1. `inc-explorer` — предпочтительный выбор для исследований.
-2. `inc-researcher` — для небольших, узких исследований.
-3. inline (без субагента) — для разовых простых операций.
+1. `inc-explorer` — preferred choice for research.
+2. `inc-researcher` — for small, narrow research.
+3. inline (no subagent) — for one-off simple operations.
 
-## Шаблоны
+## Templates
 
-- Артефакты: `inceptions/templates/motivation.md`, `overview.md`.
-- Ответы субагентов: `inceptions/templates/agent-responses.md`.
+- Artifacts: `inceptions/templates/motivation.md`, `overview.md`.
+- Subagent responses: `inceptions/templates/agent-responses.md`.
