@@ -1,6 +1,6 @@
 ---
 name: inc-extract-rules
-description: Этап 4a: экстракт правил в spawn/rules/ и spawn refresh. Кларификация активной попытки.
+description: "Этап 4a: экстракт правил в spawn/rules/ и spawn refresh. Кларификация активной попытки."
 ---
 
 # inc-extract-rules
