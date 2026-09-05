@@ -10,8 +10,8 @@ Spawn-расширение `inceptions-method` — методология мен
 
 - `extsrc/skills/inception-manager.md` — скилл (тонкая обёртка, ссылается на методологию).
 - `extsrc/files/inceptions/main.md` — полная методология (роли, правила, процесс, шаблоны).
-- `extsrc/files/inceptions/templates/` — шаблоны артефактов (motivation, overview, technical-task, result, rule).
-- `extsrc/files/inceptions/rules/` — папка для извлечённых правил (artifact).
+- `extsrc/files/inceptions/templates/` — шаблоны артефактов (motivation, overview, technical-task, result, rule, agent-responses).
+- Извлечённые правила начинаний хранятся в `spawn/rules/` (artifact, стандартный механизм Spawn).
 
 ## Установка
 

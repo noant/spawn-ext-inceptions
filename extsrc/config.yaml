@@ -1,11 +1,11 @@
 schema: 1
 name: inceptions-method
-version: 0.1.0
+version: 0.2.0
 files:
   inceptions/main.md:
     description: "Полная методология inception-manager — роли, правила, процесс, шаблоны. Единственный источник истины."
     mode: static
-    globalRead: required
+    globalRead: auto
     localRead: required
   inceptions/templates/motivation.md:
     description: "Шаблон motivation.md начинания (строгий)."
@@ -28,16 +28,51 @@ files:
     globalRead: no
     localRead: auto
   inceptions/templates/rule.md:
-    description: "Шаблон файла извлечённого правила inceptions/rules/{SLUG}-{N}-{description}.md."
+    description: "Шаблон файла извлечённого правила spawn/rules/{SLUG}-{N}-{description}.md."
     mode: artifact
     globalRead: no
     localRead: auto
+  inceptions/templates/agent-responses.md:
+    description: "Шаблоны ответов (Output format) субагентов: executor, explorer, researcher, reviewer, final report."
+    mode: static
+    globalRead: no
+    localRead: auto
 folders:
-  inceptions/rules:
+  spawn/rules:
     mode: artifact
 skills:
   inception-manager.md:
     name: inception-manager
     description: "Инструктирует LLM работать как менеджер субагентов для решения задач. Использовать когда нужно декомпозировать сложную задачу, провести исследование, создать и выполнить задачи через субагентов, управлять процессом inception."
+    required-read:
+      - inceptions/main.md
+  inc-create.md:
+    name: inc-create
+    description: "Точка входа методологии inceptions. Классификация запроса (вопрос/инициатива), кларификация, создание начинания и попытки (motivation.md, overview.md, res/)."
+    required-read:
+      - inceptions/main.md
+  inc-research.md:
+    name: inc-research
+    description: "Этап исследования (Research). Кларификация активной попытки, запуск исследователей (inc-explorer/inc-researcher), волны, ревью результатов."
+    required-read:
+      - inceptions/main.md
+  inc-task-creation.md:
+    name: inc-task-creation
+    description: "Этап создания задач (Task creation). Кларификация активной попытки, формирование ТЗ, подзадач, execution scheme, ревью задач."
+    required-read:
+      - inceptions/main.md
+  inc-execute.md:
+    name: inc-execute
+    description: "Этап выполнения (Execution). Кларификация активной попытки, выбор режима, выполнение через inc-executor, ревью."
+    required-read:
+      - inceptions/main.md
+  inc-extract-rules.md:
+    name: inc-extract-rules
+    description: "Этап 4a: экстракт правил в spawn/rules/ и spawn refresh. Кларификация активной попытки."
+    required-read:
+      - inceptions/main.md
+  inc-close.md:
+    name: inc-close
+    description: "Этап закрытия (Final report). Кларификация активной попытки, финальный отчёт, переименование попытки, закрытие начинания."
     required-read:
       - inceptions/main.md
