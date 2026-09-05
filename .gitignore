@@ -1,0 +1,6 @@
+# spawn:start
+spawn/.metadata/temp/**
+# spawn:end
+
+# Local authoring state (spawn init output) — not part of the extension source
+spawn/

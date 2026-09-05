@@ -1,0 +1,43 @@
+schema: 1
+name: inceptions-method
+version: 0.1.0
+files:
+  inceptions/main.md:
+    description: "Полная методология inception-manager — роли, правила, процесс, шаблоны. Единственный источник истины."
+    mode: static
+    globalRead: required
+    localRead: required
+  inceptions/templates/motivation.md:
+    description: "Шаблон motivation.md начинания (строгий)."
+    mode: artifact
+    globalRead: no
+    localRead: auto
+  inceptions/templates/overview.md:
+    description: "Шаблон overview.md попытки (строгий)."
+    mode: artifact
+    globalRead: no
+    localRead: auto
+  inceptions/templates/technical-task.md:
+    description: "Шаблон technical-task.md попытки (строгий)."
+    mode: artifact
+    globalRead: no
+    localRead: auto
+  inceptions/templates/result.md:
+    description: "Шаблон result.md попытки (строгий)."
+    mode: artifact
+    globalRead: no
+    localRead: auto
+  inceptions/templates/rule.md:
+    description: "Шаблон файла извлечённого правила inceptions/rules/{SLUG}-{N}-{description}.md."
+    mode: artifact
+    globalRead: no
+    localRead: auto
+folders:
+  inceptions/rules:
+    mode: artifact
+skills:
+  inception-manager.md:
+    name: inception-manager
+    description: "Инструктирует LLM работать как менеджер субагентов для решения задач. Использовать когда нужно декомпозировать сложную задачу, провести исследование, создать и выполнить задачи через субагентов, управлять процессом inception."
+    required-read:
+      - inceptions/main.md
