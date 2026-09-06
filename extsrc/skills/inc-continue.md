@@ -5,7 +5,7 @@ description: Determines where to continue work within an existing inception/atte
 
 # inc-continue
 
-Determines where to continue work within an existing inception. Role: `A1-drafter` (main chat).
+Determines where to continue work within an existing inception. Role: `IA1-drafter` (main chat).
 
 Full methodology: `inceptions/main.md`. Follow it.
 
@@ -17,7 +17,7 @@ When the user wants to continue work on an existing inception — determines the
 
 1. Determine which inception/attempt folder to continue working on:
    - If the active attempt is known from context — use it.
-   - If unclear — ask the user (`R9-ask`) which inception/attempt to continue.
+   - If unclear — ask the user (`IR9-ask`) which inception/attempt to continue.
 2. Read the attempt's `overview.md` (stage statuses, goal, research summary, subtasks).
 3. Read the subtask files `{N}-{description}.md` (if present) — status, suggested/used model.
 4. Read the inception's `motivation.md` (if needed) — status, attempts.
