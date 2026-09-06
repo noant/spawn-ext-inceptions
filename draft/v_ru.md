@@ -303,6 +303,7 @@ User -> Запрос пользователя
             волна 2..3: исследователи уточняют по конкретным уточнениям/ошибкам
         - в конце предложить: перейти к этапу создания подзадач
           ЛИБО перейти в отдельный чат с промптом: {промпт}
+        - ревью исследования пользователем: [Proceed] / [Refine] / [Stop]
         |
         v
   ЭТАП СОЗДАНИЯ ЗАДАЧ
@@ -311,7 +312,7 @@ User -> Запрос пользователя
         - указывает в шаблоне: предлагаемый субагент, используемый субагент и т.д.
         - проводит инженерные изыскания с помощью исследователей для формирования заданий
         - ревьюер делает ревью задач
-        - ожидает ОК пользователя на выполнение
+        - ревью задач пользователем: [OK] / [Fixes]
         - после ОК -> предложить перейти к этапу выполнения
         |
         v
@@ -325,6 +326,7 @@ User -> Запрос пользователя
         - ревьюер ревьюит выполненную работу
         - исправление проблем
         - формирование финального краткого отчёта
+        - ревью результата пользователем: [Done] закрыть / [Rework] доработать / [Fail] закрыть как неуспех
         |
         v
   ЭТАП 4a: ОБНОВЛЕНИЕ ДОКУМЕНТАЦИИ И ЭКСТРАКТ ПРАВИЛ
@@ -456,14 +458,18 @@ S6. **Использование** — когда обе методологии 
    - ЛИБО перейти в отдельный чат с промптом `{промпт}` (инженер формирует готовый промпт для нового чата);
    - ЛИБО создать субагента для продолжения работы над Этапом 3 (Создание задач) — запустить субагента с ролью `inc-engineer` (`inc-rule-subagent-launch`), субагент получает контекст исследования и продолжает формирование задач.
 
+2.6 **Ревью исследования пользователем** — показать пользователю сводку исследования и попросить подтвердить продолжение (`inc-rule-ask`). Пользователь выбирает один из вариантов:
+   - **[Proceed]** — исследования достаточно, перейти к Этапу 3 (Создание задач);
+   - **[Refine]** — исследование нужно доработать: пользователь указывает, что уточнить, вернуться к 2.4 (ещё одна волна исследований, до 3 волн суммарно);
+   - **[Stop]** — остановиться здесь (например, перейти в отдельный чат с промптом или завершить).
+
 **Опции на выходе:**
 
-- Перейти к Этапу 3 (Создание задач).
-- Перейти в отдельный чат с промптом.
-- Создать субагента для продолжения работы над Этапом 3.
-- Запустить ещё одну волну исследований (если остались пробелы, до 3 волн).
+- [Proceed] → перейти к Этапу 3 (Создание задач).
+- [Refine] → запустить ещё одну волну исследований (если остались пробелы, до 3 волн), вернуться к 2.4.
+- [Stop] → перейти в отдельный чат с промптом или завершить.
 
-**Статус:** в `overview.md` попытки отметить `[V] Research [model]` и `[V] Research review [model]`.
+**Статус:** в `overview.md` попытки отметить `[V] Research [model]`, `[V] Research review [model]` и `[V] User research review`.
 
 ---
 
@@ -487,16 +493,18 @@ S6. **Использование** — когда обе методологии 
 
 3.6 **Ревью задач** — запустить субагента с ролью `inc-reviewer` для ревью сформированных задач (`inc-rule-subagent-launch`).
 
-3.7 **Ожидание ОК** — ожидать ОК пользователя на выполнение (`inc-rule-ask`).
+3.7 **Ревью задач пользователем** — показать пользователю сформированные задачи и запросить ОК на выполнение (`inc-rule-ask`). Пользователь выбирает один из вариантов:
+   - **[OK]** — задачи корректны, перейти к выполнению;
+   - **[Fixes]** — задачи нужно изменить: пользователь указывает, что исправить, вернуться к 3.1–3.6 и переформировать.
 
 3.8 **Предложение выполнения** — после ОК предложить перейти к Этапу 4 (Выполнение).
 
 **Опции на выходе:**
 
-- ОК получен → перейти к Этапу 4.
-- Нужны правки → вернуться к 3.1–3.6, переформировать задачи.
+- [OK] → перейти к Этапу 4.
+- [Fixes] → вернуться к 3.1–3.6, переформировать задачи.
 
-**Статус:** отметить `[V] Task creation [model]` и `[V] Task review [model]`.
+**Статус:** отметить `[V] Task creation [model]`, `[V] Task review [model]` и `[V] User task review`.
 
 ---
 
@@ -524,13 +532,18 @@ S6. **Использование** — когда обе методологии 
 
 4.5 **Финальный отчёт** — сформировать финальный краткий отчёт (шаблон финального отчёта).
 
+4.6 **Ревью результата пользователем** — после self-review и исправления проблем показать результат пользователю и попросить подтвердить итог (`inc-rule-ask`). Пользователь выбирает один из вариантов:
+   - **[Done]** — всё сделано, задачу можно закрывать. Пользователь оценивает уровень попытки (High / Medium / Low) и подтверждает закрытие;
+   - **[Rework]** — нужны доработки: пользователь указывает, что исправить, вернуться к 4.2 (или 4.4) и продолжить;
+   - **[Fail]** — закрыть задачу как неуспешную (Low), без дальнейших доработок.
+
 **Опции на выходе:**
 
-- Успех → перейти к Этапу 5 (Закрытие), переименовать попытку в `try-{N}-High-{description}` (`inc-rule-attempt-naming`).
-- Частичный успех → переименовать в `try-{N}-Medium-{description}` (`inc-rule-attempt-naming`).
-- Неуспех → переименовать в `try-{N}-Low-{description}` (`inc-rule-attempt-naming`).
+- [Done] → перейти к Этапу 5 (Закрытие), переименовать попытку в `try-{N}-High-{description}` / `try-{N}-Medium-{description}` / `try-{N}-Low-{description}` по оценке пользователя (`inc-rule-attempt-naming`).
+- [Rework] → вернуться к 4.2 (выполнение) или 4.4 (исправление проблем) и продолжить.
+- [Fail] → переименовать в `try-{N}-Low-{description}` (`inc-rule-attempt-naming`), перейти к Этапу 5 (Закрытие).
 
-**Статус:** отметить `[V] Execution [model]` и `[V] Execution review [model]`.
+**Статус:** отметить `[V] Execution [model]`, `[V] Execution review [model]` и `[V] User result review`.
 
 ---
 
@@ -594,7 +607,7 @@ S6. **Использование** — когда обе методологии 
 Все этапы отмечаются статусом `[V]` (`inc-rule-status`). Правила формируются по принципу `inc-rule-{slug}`, роли — по принципу `inc-{role_name}`.
 
 Последовательность статусов попытки:
-Research → Research review → Task creation → Task review → Execution → Execution review → Final report → Documentation update & rules extract.
+Research → Research review → User research review → Task creation → Task review → User task review → Execution → Execution review → User result review → Final report → Documentation update & rules extract.
 
 ---
 
@@ -607,9 +620,12 @@ Research → Research review → Task creation → Task review → Execution →
 - `inceptions/templates/technical-task.md` — шаблон `technical-task.md` попытки (строгий).
 - `inceptions/templates/result.md` — шаблон `result.md` попытки (строгий).
 - `inceptions/templates/rule.md` — шаблон файла извлечённого правила `spawn/rules/{SLUG}-{N}-{description}.md`.
-- `inceptions/templates/agent-responses.md` — шаблоны ответов (Output format) субагентов: executor, explorer, researcher, reviewer, final report.
+- `inceptions/templates/executor-report.md` — шаблон ответа (Output format) субагента `inc-executor`.
+- `inceptions/templates/researcher-report.md` — шаблон ответа (Output format) субагента `inc-explorer` / `inc-researcher`.
+- `inceptions/templates/reviewer-report.md` — шаблон ответа (Output format) субагента `inc-reviewer`.
+- `inceptions/templates/final-report.md` — шаблон ответа (Output format) финального отчёта пользователю.
 
-Шаблоны задач/направлений/ревью для субагентов (входные промпты) описаны ниже в этом документе. Шаблоны ответов (Output format) вынесены в `inceptions/templates/agent-responses.md`.
+Шаблоны задач/направлений/ревью для субагентов (входные промпты) описаны ниже в этом документе. Шаблоны ответов (Output format) вынесены в отдельные файлы под `inceptions/templates/` (executor-report.md, researcher-report.md, reviewer-report.md, final-report.md).
 
 ### Шаблон задачи для исполнителя (inc-executor) — входной
 
@@ -652,7 +668,7 @@ Research → Research review → Task creation → Task review → Execution →
 **Запрещено:** задавать вопрос через ASK-тул или любой платформенный тул для вопросов (AskQuestion, ask_question, AskUserQuestion, request_user_input и т.п.). Вопросы задаются только текстом в ответе субагента родителю.
 
 ## Output format
-Заполни отчёт по шаблону «Отчёт исполнителя (inc-executor)» из `inceptions/templates/agent-responses.md`.
+Заполни отчёт по шаблону «Отчёт исполнителя (inc-executor)» из `inceptions/templates/executor-report.md`.
 ```
 
 ### Шаблон линии направления для исследователя-координатора (inc-explorer)
@@ -703,7 +719,7 @@ Research → Research review → Task creation → Task review → Execution →
 - В ответе НЕ дублируй полный inline-отчёт — только ссылку на файл.
 
 ## Output format
-Заполни отчёт по шаблону «Отчёт исследователя (inc-explorer / inc-researcher)» из `inceptions/templates/agent-responses.md`.
+Заполни отчёт по шаблону «Отчёт исследователя (inc-explorer / inc-researcher)» из `inceptions/templates/researcher-report.md`.
 ```
 
 ### Шаблон линии направления для исследователя-исполнителя (inc-researcher)
@@ -754,7 +770,7 @@ Research → Research review → Task creation → Task review → Execution →
 - В ответе НЕ дублируй полный inline-отчёт — только ссылку на файл.
 
 ## Output format
-Заполни отчёт по шаблону «Отчёт исследователя (inc-explorer / inc-researcher)» из `inceptions/templates/agent-responses.md`.
+Заполни отчёт по шаблону «Отчёт исследователя (inc-explorer / inc-researcher)» из `inceptions/templates/researcher-report.md`.
 ```
 
 При создании нескольких исследователей — задать каждой свою линию (например, 3 разные линии для 3 субагентов), либо не задавать направление (be free).
@@ -789,12 +805,12 @@ Research → Research review → Task creation → Task review → Execution →
 {Критерии ревью: что проверять, на что обращать внимание.}
 
 ## Output format
-Заполни отчёт по шаблону «Отчёт ревьюера (inc-reviewer)» из `inceptions/templates/agent-responses.md`.
+Заполни отчёт по шаблону «Отчёт ревьюера (inc-reviewer)» из `inceptions/templates/reviewer-report.md`.
 ```
 
 ### Шаблон финального отчёта пользователю
 
-Заполни отчёт по шаблону «Финальный отчёт пользователю» из `inceptions/templates/agent-responses.md`.
+Заполни отчёт по шаблону «Финальный отчёт пользователю» из `inceptions/templates/final-report.md`.
 
 ## Правила именования
 
@@ -804,4 +820,4 @@ Research → Research review → Task creation → Task review → Execution →
 - **Файлы исследований:** `{task-descr-slug}.{agent-slug}.md` в папке `res/` попытки (`inc-rule-res-file`), где `{task-descr-slug}` — слаг направления/задачи, `{agent-slug}` — однословный слаг цели агента.
 - **Внутренние правила методологии:** `inc-rule-{slug}` (inc-rule-ask, inc-rule-ambient и т.д.), описаны в этом документе.
 - **Извлечённые правила начинаний:** `{SLUG}-{N}-{description}`, хранятся в `spawn/rules/{SLUG}-{N}-{description}.md`.
-- **Статусы этапов:** Research → Research review → Task creation → Task review → Execution → Execution review → Final report → Documentation update & rules extract.
+- **Статусы этапов:** Research → Research review → User research review → Task creation → Task review → User task review → Execution → Execution review → User result review → Final report → Documentation update & rules extract.

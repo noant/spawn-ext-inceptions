@@ -28,9 +28,12 @@ When the user wants to continue work on an existing inception — determines the
 By the `[V]` statuses in `overview.md`, determine at which stage the work stopped:
 
 - No `[V] Research` → continue from Stage 2 (Research).
-- Has `[V] Research`, no `[V] Task creation` → continue from Stage 3 (Task creation).
-- Has `[V] Task creation`, no `[V] Execution` → continue from Stage 4 (Execution).
-- Has `[V] Execution`, no `[V] Final report` → continue from Stage 4a/5 (Closing).
+- Has `[V] Research`, no `[V] User research review` → continue from Stage 2.6 (User research review).
+- Has `[V] User research review`, no `[V] Task creation` → continue from Stage 3 (Task creation).
+- Has `[V] Task creation`, no `[V] User task review` → continue from Stage 3.7 (User task review).
+- Has `[V] User task review`, no `[V] Execution` → continue from Stage 4 (Execution).
+- Has `[V] Execution`, no `[V] User result review` → continue from Stage 4.6 (User result review).
+- Has `[V] User result review`, no `[V] Final report` → continue from Stage 4a/5 (Closing).
 - Everything marked → inception is closed, propose a new attempt or a new inception.
 
 ## Order
@@ -44,4 +47,4 @@ By the `[V]` statuses in `overview.md`, determine at which stage the work stoppe
 ## Templates
 
 - Artifacts: `inceptions/templates/overview.md`, `technical-task.md`, `result.md`, `motivation.md`.
-- Subagent responses: `inceptions/templates/agent-responses.md`.
+- Subagent responses: `inceptions/templates/executor-report.md`, `researcher-report.md`, `reviewer-report.md`, `final-report.md`.

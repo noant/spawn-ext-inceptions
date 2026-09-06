@@ -61,4 +61,4 @@ Build the subagent prompt by the "Direction line template" from `inceptions/main
 ## Templates
 
 - Artifacts: `inceptions/templates/motivation.md`, `overview.md`.
-- Subagent responses: `inceptions/templates/agent-responses.md`.
+- Subagent responses: `inceptions/templates/executor-report.md`, `researcher-report.md`, `reviewer-report.md`, `final-report.md`.

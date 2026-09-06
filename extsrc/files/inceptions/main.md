@@ -301,6 +301,7 @@ Engineer (inc-engineer)
             wave 2..3: researchers refine by specific clarifications/errors
         - at the end propose: move to the task creation stage
           OR move to a separate chat with the prompt: {prompt}
+        - user research review: [Proceed] / [Refine] / [Stop]
         |
         v
   TASK CREATION STAGE
@@ -309,7 +310,7 @@ Engineer (inc-engineer)
         - specifies in the template: suggested subagent, used subagent, etc.
         - conducts engineering research with researchers to form tasks
         - reviewer reviews the tasks
-        - waits for the user's OK to execute
+        - user task review: [OK] / [Fixes]
         - after OK -> propose moving to the execution stage
         |
         v
@@ -323,6 +324,7 @@ Engineer (inc-engineer)
         - reviewer reviews the completed work
         - fixing problems
         - forming the final brief report
+        - user result review: [Done] close / [Rework] rework / [Fail] close as failed
         |
         v
   STAGE 4a: DOCUMENTATION UPDATE AND RULES EXTRACT
@@ -454,14 +456,18 @@ The engineer accepts the user request and classifies it:
    - OR move to a separate chat with the prompt `{prompt}` (the engineer forms a ready prompt for a new chat);
    - OR create a subagent to continue working on Stage 3 (Task creation) — launch a subagent with role `inc-engineer` (`inc-rule-subagent-launch`), the subagent receives the research context and continues forming tasks.
 
+2.6 **User research review** — show the research summary to the user and ask them to confirm the continuation (`inc-rule-ask`). The user chooses one of:
+   - **[Proceed]** — the research is sufficient, move to Stage 3 (Task creation);
+   - **[Refine]** — the research needs refinement: the user points out what to clarify, return to 2.4 (another research wave, up to 3 waves total);
+   - **[Stop]** — stop here (e.g., move to a separate chat with a prompt, or finish).
+
 **Output options:**
 
-- Move to Stage 3 (Task creation).
-- Move to a separate chat with a prompt.
-- Create a subagent to continue working on Stage 3.
-- Launch another research wave (if gaps remain, up to 3 waves).
+- [Proceed] → move to Stage 3 (Task creation).
+- [Refine] → launch another research wave (if gaps remain, up to 3 waves), return to 2.4.
+- [Stop] → move to a separate chat with a prompt, or finish.
 
-**Status:** in the attempt's `overview.md` mark `[V] Research [model]` and `[V] Research review [model]`.
+**Status:** in the attempt's `overview.md` mark `[V] Research [model]`, `[V] Research review [model]` and `[V] User research review`.
 
 ---
 
@@ -485,16 +491,18 @@ The engineer accepts the user request and classifies it:
 
 3.6 **Task review** — launch a subagent with role `inc-reviewer` to review the formed tasks (`inc-rule-subagent-launch`).
 
-3.7 **Waiting for OK** — wait for the user's OK to execute (`inc-rule-ask`).
+3.7 **User task review** — show the formed tasks to the user and ask for their OK to execute (`inc-rule-ask`). The user chooses one of:
+   - **[OK]** — the tasks are correct, proceed to execution;
+   - **[Fixes]** — the tasks need changes: the user points out what to fix, return to 3.1–3.6 and reform.
 
 3.8 **Execution proposal** — after OK, propose moving to Stage 4 (Execution).
 
 **Output options:**
 
-- OK received → move to Stage 4.
-- Fixes needed → return to 3.1–3.6, reform tasks.
+- [OK] → move to Stage 4.
+- [Fixes] → return to 3.1–3.6, reform tasks.
 
-**Status:** mark `[V] Task creation [model]` and `[V] Task review [model]`.
+**Status:** mark `[V] Task creation [model]`, `[V] Task review [model]` and `[V] User task review`.
 
 ---
 
@@ -522,13 +530,18 @@ The engineer accepts the user request and classifies it:
 
 4.5 **Final report** — form the final brief report (final report template).
 
+4.6 **User result review** — after the self-review and fixing problems, show the result to the user and ask them to confirm the outcome (`inc-rule-ask`). The user chooses one of:
+   - **[Done]** — everything is done, the task can be closed. The user assesses the attempt level (High / Medium / Low) and confirms closing;
+   - **[Rework]** — rework is needed: the user points out what to fix, return to 4.2 (or 4.4) and continue;
+   - **[Fail]** — close the task as failed (Low), without further rework.
+
 **Output options:**
 
-- Success → move to Stage 5 (Closing), rename the attempt to `try-{N}-High-{description}` (`inc-rule-attempt-naming`).
-- Partial success → rename to `try-{N}-Medium-{description}` (`inc-rule-attempt-naming`).
-- Failure → rename to `try-{N}-Low-{description}` (`inc-rule-attempt-naming`).
+- [Done] → move to Stage 5 (Closing), rename the attempt to `try-{N}-High-{description}` / `try-{N}-Medium-{description}` / `try-{N}-Low-{description}` per the user's assessment (`inc-rule-attempt-naming`).
+- [Rework] → return to 4.2 (execution) or 4.4 (fixing problems) and continue.
+- [Fail] → rename to `try-{N}-Low-{description}` (`inc-rule-attempt-naming`), move to Stage 5 (Closing).
 
-**Status:** mark `[V] Execution [model]` and `[V] Execution review [model]`.
+**Status:** mark `[V] Execution [model]`, `[V] Execution review [model]` and `[V] User result review`.
 
 ---
 
@@ -592,7 +605,7 @@ After receiving the work artifact, the engineer analyzes it and shows the user:
 All stages are marked with the `[V]` status (`inc-rule-status`). Rules are formed by the `inc-rule-{slug}` principle, roles — by the `inc-{role_name}` principle.
 
 Attempt status sequence:
-Research → Research review → Task creation → Task review → Execution → Execution review → Final report → Documentation update & rules extract.
+Research → Research review → User research review → Task creation → Task review → User task review → Execution → Execution review → User result review → Final report → Documentation update & rules extract.
 
 ---
 
@@ -605,9 +618,12 @@ Artifact templates are extracted into separate files under `inceptions/templates
 - `inceptions/templates/technical-task.md` — template for the attempt's `technical-task.md` (strict).
 - `inceptions/templates/result.md` — template for the attempt's `result.md` (strict).
 - `inceptions/templates/rule.md` — template for the extracted rule file `spawn/rules/{SLUG}-{N}-{description}.md`.
-- `inceptions/templates/agent-responses.md` — response templates (Output format) of subagents: executor, explorer, researcher, reviewer, final report.
+- `inceptions/templates/executor-report.md` — response template (Output format) of the `inc-executor` subagent.
+- `inceptions/templates/researcher-report.md` — response template (Output format) of the `inc-explorer` / `inc-researcher` subagent.
+- `inceptions/templates/reviewer-report.md` — response template (Output format) of the `inc-reviewer` subagent.
+- `inceptions/templates/final-report.md` — response template (Output format) of the final report to the user.
 
-Task/direction/review templates for subagents (input prompts) are described below in this document. Response templates (Output format) are extracted into `inceptions/templates/agent-responses.md`.
+Task/direction/review templates for subagents (input prompts) are described below in this document. Response templates (Output format) are extracted into separate files under `inceptions/templates/` (executor-report.md, researcher-report.md, reviewer-report.md, final-report.md).
 
 ### Task template for the executor (inc-executor) — input
 
@@ -650,7 +666,7 @@ You are an executor subagent (inc-executor). Role: `inc-executor`. Agent slug: `
 **Forbidden:** to ask a question via the ASK tool or any platform tool for questions (AskQuestion, ask_question, AskUserQuestion, request_user_input, etc.). Questions are asked only in text in the subagent's response to the parent.
 
 ## Output format
-Fill the report by the "Executor report (inc-executor)" template from `inceptions/templates/agent-responses.md`.
+Fill the report by the "Executor report (inc-executor)" template from `inceptions/templates/executor-report.md`.
 ```
 
 ### Direction line template for the coordinating researcher (inc-explorer)
@@ -701,7 +717,7 @@ Write the full research to the attempt's file: `res/{task-descr-slug}.{agent-slu
 - Do NOT duplicate the full inline report in the response — only a link to the file.
 
 ## Output format
-Fill the report by the "Researcher report (inc-explorer / inc-researcher)" template from `inceptions/templates/agent-responses.md`.
+Fill the report by the "Researcher report (inc-explorer / inc-researcher)" template from `inceptions/templates/researcher-report.md`.
 ```
 
 ### Direction line template for the executing researcher (inc-researcher)
@@ -752,7 +768,7 @@ Write the full research to the attempt's file: `res/{task-descr-slug}.{agent-slu
 - Do NOT duplicate the full inline report in the response — only a link to the file.
 
 ## Output format
-Fill the report by the "Researcher report (inc-explorer / inc-researcher)" template from `inceptions/templates/agent-responses.md`.
+Fill the report by the "Researcher report (inc-explorer / inc-researcher)" template from `inceptions/templates/researcher-report.md`.
 ```
 
 When creating several researchers — set each its own line (e.g., 3 different lines for 3 subagents), or do not set a direction (be free).
@@ -787,12 +803,12 @@ You are a reviewer subagent (inc-reviewer). Role: `inc-reviewer`. Agent slug: `{
 {Review criteria: what to check, what to pay attention to.}
 
 ## Output format
-Fill the report by the "Reviewer report (inc-reviewer)" template from `inceptions/templates/agent-responses.md`.
+Fill the report by the "Reviewer report (inc-reviewer)" template from `inceptions/templates/reviewer-report.md`.
 ```
 
 ### Final report template to the user
 
-Fill the report by the "Final report to the user" template from `inceptions/templates/agent-responses.md`.
+Fill the report by the "Final report to the user" template from `inceptions/templates/final-report.md`.
 
 ## Naming rules
 
@@ -802,4 +818,4 @@ Fill the report by the "Final report to the user" template from `inceptions/temp
 - **Research files:** `{task-descr-slug}.{agent-slug}.md` in the attempt's `res/` folder (`inc-rule-res-file`), where `{task-descr-slug}` — slug of the direction/task, `{agent-slug}` — one-word slug of the agent's goal.
 - **Internal methodology rules:** `inc-rule-{slug}` (inc-rule-ask, inc-rule-ambient, etc.), described in this document.
 - **Extracted inception rules:** `{SLUG}-{N}-{description}`, stored in `spawn/rules/{SLUG}-{N}-{description}.md`.
-- **Stage statuses:** Research → Research review → Task creation → Task review → Execution → Execution review → Final report → Documentation update & rules extract.
+- **Stage statuses:** Research → Research review → User research review → Task creation → Task review → User task review → Execution → Execution review → User result review → Final report → Documentation update & rules extract.

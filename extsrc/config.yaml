@@ -1,6 +1,6 @@
 schema: 1
 name: inceptions-method
-version: 0.6.0
+version: 0.7.0
 files:
   inceptions/main.md:
     description: "Full inception-manager methodology — roles, rules, process, templates. Single source of truth."
@@ -32,8 +32,23 @@ files:
     mode: artifact
     globalRead: no
     localRead: auto
-  inceptions/templates/agent-responses.md:
-    description: "Response templates (Output format) of subagents: executor, explorer, researcher, reviewer, final report."
+  inceptions/templates/executor-report.md:
+    description: "Response template (Output format) of the inc-executor subagent."
+    mode: static
+    globalRead: no
+    localRead: auto
+  inceptions/templates/researcher-report.md:
+    description: "Response template (Output format) of the inc-explorer / inc-researcher subagent."
+    mode: static
+    globalRead: no
+    localRead: auto
+  inceptions/templates/reviewer-report.md:
+    description: "Response template (Output format) of the inc-reviewer subagent."
+    mode: static
+    globalRead: no
+    localRead: auto
+  inceptions/templates/final-report.md:
+    description: "Response template (Output format) of the final report to the user."
     mode: static
     globalRead: no
     localRead: auto

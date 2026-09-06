@@ -3,10 +3,13 @@
 ## Status
 - [ ] Research [model]
 - [ ] Research review [model]
+- [ ] User research review
 - [ ] Task creation [model]
 - [ ] Task review [model]
+- [ ] User task review
 - [ ] Execution [model]
 - [ ] Execution review [model]
+- [ ] User result review
 - [ ] Final report [model]
 - [ ] Documentation update & rules extract [model]
 
