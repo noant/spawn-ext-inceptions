@@ -1,6 +1,1 @@
 # Spawn navigation (local)
-
-read-required:
-  - ext:
-      hints:
-        - "Draft authoring process for inceptions/main.md: first draft/v_ru.md, then translate to draft/v_en.md, after validation — into inceptions/main.md."
