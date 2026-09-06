@@ -9,8 +9,7 @@ Role identifiers: `inc-{role_name}`. Rules: `inc-rule-{slug}`.
 ### inc-engineer (Engineer) — main chat
 - Takes research results and the overall work context as input.
 - Synthesizes and forms a list of tasks for executor agents.
-- Can conduct small research itself or modify the system.
-- Can intervene in any process it deems necessary to solve the task.
+- Can conduct small research itself or modify the system; can intervene in any process it deems necessary.
 - Proposes a way to solve the task based on research and already-used suitable experiences.
 - Can run several research cycles; between them asks the user about the acceptability of potential solutions and consults on the preferred next step.
 - Creates tasks for researchers, receives research, synthesizes tasks for executors, receives the work artifact, analyzes it, shows the result to the user.
@@ -23,16 +22,11 @@ Role identifiers: `inc-{role_name}`. Rules: `inc-rule-{slug}`.
 - `inc-executor` — executor: performs a task by a clear technical task (spec). Does not create subagents.
 - `inc-reviewer` — reviewer: reviews research/tasks/work. Can call `inc-explorer`/`inc-researcher`.
 
-**Researcher selection preference:**
-1. `inc-explorer` — preferred choice for research (allows decomposition into lines).
-2. `inc-researcher` — for small, narrow, single-line research.
-3. inline (no subagent) — for one-off simple operations where launching a subagent is excessive.
+**Researcher selection preference:** `inc-explorer` (allows decomposition into lines) > `inc-researcher` (small, narrow, single-line) > inline (one-off simple operations where launching a subagent is excessive).
 
 ### inc-explorer (Coordinating researcher)
-- Actively uses available information to find the needed data.
-- Generates and checks different hypotheses by association.
-- Actively uses: web search, file and session search, information from available tools.
-- Explores all possible sources: available workspaces, access to spaces through tools, git repositories, web search, user data.
+- Actively uses available information to find the needed data; generates and checks different hypotheses by association.
+- Actively uses: web search, file and session search, information from available tools, workspaces, git repositories, user data.
 - Does not modify the system (read-only), except creating a research file in the attempt's `res/` (`inc-rule-res-file`).
 - Before searching, a direction line is created (e.g., for 3 different subagents — 3 different lines), or no direction is set (be free).
 - Collects facts along the way from encountered texts and search results, classifies their importance.
@@ -47,31 +41,17 @@ Role identifiers: `inc-{role_name}`. Rules: `inc-rule-{slug}`.
 - **Strictly forbidden to create subagents at all** (`inc-rule-subagent-depth`). Works only independently.
 
 ### inc-executor (Executor)
-- Performs work by order, has clear instructions.
-- Can ask a question for clarification.
-- Accepts a task by a clear template.
-- Reports on work by a clear template at the output.
+- Performs work by order, has clear instructions; can ask a question for clarification.
+- Accepts a task by a clear template and reports on work by a clear template at the output.
 - On launch receives the role `inc-executor` and the agent slug `{agent-slug}` — a one-word slug of the goal (`inc-rule-agent-slug`).
 
 ### inc-reviewer (Reviewer)
-- Reviews research results, formed tasks, completed work.
-- Can call researcher subagents if needed.
+- Reviews research results, formed tasks, completed work; can call researcher subagents if needed.
 - On launch receives the role `inc-reviewer` and the agent slug `{agent-slug}` — a one-word slug of the goal (`inc-rule-agent-slug`).
 
-## Choosing a subagent role (when to launch which)
+### When to launch which role (phases and roles)
 
-The subagent role is determined by the process phase and the need for decomposition. The phase is determined by the request type (A question / B initiative) and the current stage.
-
-### inc-explorer vs inc-researcher (research roles)
-
-Both roles search for data, check hypotheses, read-only. The difference is only in the right to create subagents:
-
-- **inc-explorer** (coordinating researcher) — when research requires decomposition into independent sub-lines that need to be launched in parallel/sequentially by subagents. Can create only `inc-researcher`.
-- **inc-researcher** (executing researcher) — when research is narrow, single-line, does not require nested subagents. Works alone.
-
-**Selection rule:** if answering the question does not require child researchers — use `inc-researcher` (cheaper, less nesting). If decomposition into several lines is needed — use `inc-explorer`.
-
-### Phases and roles
+The subagent role is determined by the process phase and the need for decomposition. The phase is determined by the request type (A question / B initiative) and the current stage. The research roles (`inc-explorer` vs `inc-researcher`) differ only in the right to create subagents: `inc-explorer` when research requires decomposition into independent sub-lines; `inc-researcher` when research is narrow, single-line, does not require nested subagents.
 
 | Phase / stage | Role | When |
 |---|---|---|
@@ -80,9 +60,7 @@ Both roles search for data, check hypotheses, read-only. The difference is only 
 | Execution (Stage 4) | `inc-executor` (execution) + `inc-reviewer` (review) | task formulated as a spec with instructions and acceptance criteria |
 | Review (Research/Task/Execution review) | `inc-reviewer` | check research/tasks/work |
 
-**inc-executor** — only at Stages 3–4 (task creation/execution), NOT for research. Chosen when the task is formulated as a spec with clear instructions and acceptance criteria.
-
-**inc-reviewer** — at review stages (Research review, Task review, Execution review).
+`inc-executor` — only at Stages 3–4 (task creation/execution), NOT for research. Chosen when the task is formulated as a spec with clear instructions and acceptance criteria. `inc-reviewer` — at review stages (Research review, Task review, Execution review).
 
 ## Rules
 
@@ -261,93 +239,42 @@ try-{N}-{Level}-{description}/
     {direction}.{goal}.md  — research: {task-descr-slug}.{agent-slug}.md
 ```
 
-Research files of role subagents (explorer/researcher) are stored in the attempt's `res/` folder. The file name is formed by `inc-rule-res-file`.
-
-Each attempt is stored within a single folder of a single task. After completion, the task folder is renamed to the corresponding status (Low/Medium/High/New).
+Research files of role subagents (explorer/researcher) are stored in the attempt's `res/` folder. The file name is formed by `inc-rule-res-file`. Each attempt is stored within a single folder of a single task. After completion, the task folder is renamed to the corresponding status (Low/Medium/High/New).
 
 Internal methodology rules (`inc-rule-{slug}`, e.g. `inc-rule-ask`) are described in this document and are not extracted into separate files. Rules extracted from inceptions are stored in `spawn/rules/{SLUG}-{N}-{description}.md` — one rule per file (`inc-rule-extract`).
 
 ## Process (structural)
 
 ```
-User -> User request
-  |
-  v
-Engineer (inc-engineer)
-  |
-  +-- [A] Is the request an already-formed question?
-  |     |
-  |     +-- ask basic clarification if something is unclear, wait for the answer
-  |     +-- split the question into several questions
-  |     +-- organize a researcher subagent or a team of subagents
-  |     +-- distribute tasks (set the direction)
-  |     +-- synthesize the answer from the received information (one or several variants of truth)
-  |     +-- if it is clear what inception the user wants -> propose the Research stage
-  |
-  +-- [B] The user immediately starts the research stage
-        (initiative in solving a problem, explicit "do" request, request to conduct research)
-        |
-        v
-  RESEARCH STAGE
-        - clarify the initiative, ask for motivation, ask questions
-        - create necessary files by templates
-        - launch researcher agents
-        - form the attempt documentation folder (if first attempt of first inception — also create inception folders)
-        - create the research results file
-        - there can be several research cycles (up to 3 waves):
-            wave 1: researchers form base artifacts
-                     -> reviewer reviews the results
-                     -> engineer analyzes the artifacts
-            wave 2..3: researchers refine by specific clarifications/errors
-        - at the end propose: move to the task creation stage
-          OR move to a separate chat with the prompt: {prompt}
-        - user research review: [Proceed] / [Refine] / [Stop]
-        |
-        v
-  TASK CREATION STAGE
-        - engineer forms the high-level technical task in the attempt's overview
-        - forms subtasks for subagents
-        - specifies in the template: suggested subagent, used subagent, etc.
-        - conducts engineering research with researchers to form tasks
-        - reviewer reviews the tasks
-        - user task review: [OK] / [Fixes]
-        - after OK -> propose moving to the execution stage
-        |
-        v
-  EXECUTION STAGE
-        - engineer asks how to execute the task (4 options):
-            * [A] automatic — automatically by the scheme with subagents (default)
-            * [B] step by step — sequentially with confirmation of each step
-            * [C] inline — without subagents, the engineer does it in the chat (risk of hallucinations; anti-pattern)
-            * [D] show task details — first show details, then choose the mode
-        - execution
-        - reviewer reviews the completed work
-        - fixing problems
-        - forming the final brief report
-        - user result review: [Done] close / [Rework] rework / [Fail] close as failed
-        |
-        v
+User -> User request -> Engineer (inc-engineer)
+  [A] Question: ask basic clarification if unclear -> split into sub-questions
+      -> organize researcher subagent(s) -> distribute tasks (set direction)
+      -> synthesize the answer -> if an inception is clear, propose the Research stage
+  [B] Initiative / explicit "do": start the Research stage directly
+  RESEARCH STAGE (Stage 2): clarify initiative, ask motivation/questions
+      -> create base docs by templates -> launch researchers (up to 3 waves;
+      reviewer reviews each wave, engineer analyzes artifacts)
+      -> user research review: [Proceed] / [Refine] / [Stop]
+  TASK CREATION STAGE (Stage 3): form high-level task in overview
+      -> form subtasks -> engineering research -> reviewer reviews tasks
+      -> user task review: [OK] / [Fixes]
+  EXECUTION STAGE (Stage 4): choose mode [A]auto / [B]step / [C]inline / [D]details
+      -> execute -> reviewer reviews -> fix problems -> final brief report
+      -> user result review: [Done] / [Rework] / [Fail]
   STAGE 4a: DOCUMENTATION UPDATE AND RULES EXTRACT
-        - extract rules from the completed work (while working with the user)
-        - save rules to spawn/rules/{SLUG}-{N}-{description}.md
-        - update necessary documentation (overview, technical-task, result, motivation)
-        |
-        v
-  CLOSING STAGE (Final report)
-        - analyze the artifact, show the user, rename the attempt, fill motivation.md
+      -> extract rules to spawn/rules/{SLUG}-{N}-{description}.md -> update docs
+  CLOSING STAGE (Stage 5, Final report): analyze artifact, show user,
+      rename attempt, fill motivation.md
 ```
+
+The detailed step-by-step flow, decision points, and user-review options are described in "Detailed stage description" below.
 
 ## Synchronous work with another methodology (optional step, inc-rule-synthesis)
 
 Launched from Stage 0 (Entry), when the request involves another methodology/skill/instruction compatible with inceptions. Skipped entirely when none is detected.
 
-S0. **Detection (Stage 0)** — when classifying the request, check whether it refers to another methodology/skill/instruction (`spec/main.md`, another Spawn extension, a team skill, an instruction file) that can be run together with inceptions.
-   - nothing detected → skip; continue the normal flow (this step is a no-op).
-   - inceptions itself detected (self-synthesis) → skip; continue the normal flow.
-   - several methodologies detected → go to S1 and ask which single one to run.
-S1. **Offer (inc-rule-ask)** — if one methodology is detected, ask the user whether to form synchronous work with it.
-   - user declined → skip; continue the normal flow.
-   - several detected → ask which single methodology to run the synthesis with.
+S0. **Detection (Stage 0)** — when classifying the request, check whether it refers to another methodology/skill/instruction (`spec/main.md`, another Spawn extension, a team skill, an instruction file) that can be run together with inceptions. Nothing detected or inceptions itself (self-synthesis) → skip (no-op). Several detected → ask which single one.
+S1. **Offer (inc-rule-ask)** — if one methodology is detected, ask the user whether to form synchronous work with it. Declined → skip; several detected → ask which single one.
 S2. **Preparation** — determine the source of the target methodology (path to its main.md / skill / instruction) and its list of steps. Agree on the joint-work file name (see naming below) with the user.
 S3. **Launch the executor** — launch an `inc-executor` subagent (`inc-rule-subagent-launch`, `inc-rule-ambient`, `inc-rule-model-line`) with the task: read inceptions/main.md and the target methodology, then write a joint-work instruction file mapping inceptions stages/steps → steps of the target methodology.
 S4. **Writing** — the executor writes the file to `spawn/rules/` (see naming below) and reports the path (`inc-rule-changed-files`).
@@ -365,12 +292,10 @@ S6. **Usage** — when both methodologies run simultaneously, read the joint-wor
 **Executor:** `inc-engineer` (main chat)
 
 The engineer accepts the user request and classifies it:
-
 - **[A] Question** — the request is an already-formed question (the user asks, not requests to "do").
 - **[B] Initiative / task** — the user sets an initiative in solving a problem, forms an explicit "do" request, or asks to conduct research.
 
 **What the engineer does:**
-
 0.0 **Synthesis check (inc-rule-synthesis)** — if the request involves another methodology/skill/instruction, offer to form synchronous work with it (see "Synchronous work with another methodology"). If none detected — skip.
 1. Determines the user's language (`inc-rule-language`): if unambiguous — work in it; if ambiguous — offer a set of languages via `inc-rule-ask`.
 2. Determines the request type (A or B).
@@ -378,7 +303,6 @@ The engineer accepts the user request and classifies it:
 4. If the request can be attributed to an existing inception in `inceptions/` — proposes to continue working with it (pass the inception, problem, etc. in text).
 
 **Options:**
-
 - Type A request → move to Stage 1 (Question).
 - Type B request → move to Stage 2 (Research).
 - Request relates to an existing inception → propose to continue, upon agreement — open the corresponding folder and continue from the needed stage.
@@ -390,23 +314,15 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer`
 
 **What the engineer does:**
-
 1.0 **Synthesis check (inc-rule-synthesis)** — if the question involves another methodology/skill, offer synchronous work; if none detected — skip.
-
 1.1 **Clarification** — if something is unclear, ask the user basic clarification and wait for the answer.
-
 1.2 **Question decomposition** — split the question into several sub-questions.
-
 1.3 **Organizing researchers** — organize a researcher subagent (`inc-explorer`) or a team of subagents (launch by `inc-rule-subagent-launch`, `inc-rule-ambient`, `inc-rule-model-line`).
-
 1.4 **Task distribution** — distribute sub-questions among researchers, set each line a direction (see the direction line template) or do not set it (be free).
-
 1.5 **Answer synthesis** — synthesize the answer from the received information: one or several variants of truth.
-
 1.6 **Inception proposal** — if it is clear from the received information what inception the user wants to make, propose starting Stage 2 (Research).
 
 **Output options:**
-
 - Answer given, no inception needed → finish.
 - Inception is clear → propose Stage 2, wait for the user's agreement.
 
@@ -419,53 +335,35 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer` (coordination), `inc-explorer` (research), `inc-reviewer` (review)
 
 **What the engineer does:**
-
 2.0 **Synthesis check (inc-rule-synthesis)** — if the initiative involves another methodology/skill, offer synchronous work; if none detected — skip.
-
 2.1 **Initiative clarification** — clarify the user's initiative, ask for motivation, ask necessary questions (`inc-rule-ask`: ask the user, not subagents).
-
 2.2 **Base documentation creation (mandatory, before any research)** — create the attempt's base documentation by templates (`inc-rule-paths`). This step MUST be done before launching any researcher:
    - if first attempt of first inception — create the folder `inceptions/{N}-{inception-slug}/` and `motivation.md`;
    - create the attempt folder `try-{N}-New-{description}/` (`inc-rule-attempt-naming`);
    - create `overview.md` (statuses, goal, motivation — strict template);
    - create the research folder `res/` (`inc-rule-res-file`).
    - **Checklist (all must be created before research starts):** `motivation.md` (first attempt), `try-{N}-New-{description}/`, `overview.md`, `res/`. If any is missing — stop and create it; do not launch researchers without the base documentation in place.
-
 2.3 **Research depth selection** — ask the user the research depth (`inc-rule-ask`). Three modes:
    - **[inline]** — the engineer researches in the chat without subagents (for trivial, one-off questions);
    - **[medium]** — launch a single `inc-explorer` (or `inc-researcher` for a narrow single-line question);
    - **[high]** — launch several directed `inc-explorer` subagents, each with its own direction line (decomposition into independent lines).
    - If the user does not specify — default to **[medium]** (single explorer).
-
 2.4 **Research loop (explorer-driven)** — the engineer runs the research in a loop. Each iteration:
-
    2.4.1 **Decompose** — split the research into independent direction lines (for `high` depth — several lines; for `medium` — one line). Assign each line an agent slug (`inc-rule-agent-slug`).
-
    2.4.2 **Launch** — launch `inc-explorer` (or `inc-researcher`) subagents, one per line, by the "Direction line template" (`inc-rule-subagent-launch`, `inc-rule-subagent-depth`, `inc-rule-ambient`, `inc-rule-model-line`). Each researcher writes the full research to the attempt's file `res/{task-descr-slug}.{agent-slug}.md` and attaches a link in the report (`inc-rule-res-file`).
-
    2.4.3 **Collect** — collect the research files from `res/`, synthesize the results into the Research summary in `overview.md` (with links to the files).
-
    2.4.4 **Review** — launch a subagent with role `inc-reviewer` to review the results (`inc-rule-subagent-launch`). The engineer analyzes the artifacts.
-
    2.4.5 **Decide** — based on the review:
    - gaps remain → run another wave (up to 3 waves total): refine by specific clarifications/errors, go back to 2.4.1;
    - research complete → proceed to 2.5.
-
 2.5 **Continuation proposal** — at the end propose:
    - move to Stage 3 (Task creation);
    - OR move to a separate chat with the prompt `{prompt}` (the engineer forms a ready prompt for a new chat);
    - OR create a subagent to continue working on Stage 3 (Task creation) — launch a subagent with role `inc-engineer` (`inc-rule-subagent-launch`), the subagent receives the research context and continues forming tasks.
-
 2.6 **User research review** — show the research summary to the user and ask them to confirm the continuation (`inc-rule-ask`). The user chooses one of:
    - **[Proceed]** — the research is sufficient, move to Stage 3 (Task creation);
    - **[Refine]** — the research needs refinement: the user points out what to clarify, return to 2.4 (another research wave, up to 3 waves total);
    - **[Stop]** — stop here (e.g., move to a separate chat with a prompt, or finish).
-
-**Output options:**
-
-- [Proceed] → move to Stage 3 (Task creation).
-- [Refine] → launch another research wave (if gaps remain, up to 3 waves), return to 2.4.
-- [Stop] → move to a separate chat with a prompt, or finish.
 
 **Status:** in the attempt's `overview.md` mark `[V] Research [model]`, `[V] Research review [model]` and `[V] User research review`.
 
@@ -476,31 +374,17 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer` (coordination), `inc-explorer` (engineering research), `inc-reviewer` (task review)
 
 **What the engineer does:**
-
 3.0 **Synthesis check (inc-rule-synthesis)** — if the task involves another methodology/skill, ensure the joint-work instruction is available and applied; if none detected — skip.
-
 3.1 **Spec formation** — based on the research, form the high-level technical task in the attempt's `technical-task.md`.
-
 3.2 **Subtask formation** — form subtasks for executor subagents (`inc-executor`).
-
 3.3 **Agent specification** — in the task template specify: suggested agent, used agent, etc.
-
 3.4 **Execution scheme formation** — form `## Execution scheme` in `technical-task.md`: split tasks into sequential (→) and parallel (||) phases, as in `spec/main.md`. Each task is performed by a separate `inc-executor` subagent.
-
 3.5 **Engineering research** — conduct engineering research with researchers (`inc-explorer` or `inc-researcher`) to refine task wording (launch by `inc-rule-subagent-launch`, `inc-rule-subagent-depth`).
-
 3.6 **Task review** — launch a subagent with role `inc-reviewer` to review the formed tasks (`inc-rule-subagent-launch`).
-
 3.7 **User task review** — show the formed tasks to the user and ask for their OK to execute (`inc-rule-ask`). The user chooses one of:
    - **[OK]** — the tasks are correct, proceed to execution;
    - **[Fixes]** — the tasks need changes: the user points out what to fix, return to 3.1–3.6 and reform.
-
 3.8 **Execution proposal** — after OK, propose moving to Stage 4 (Execution).
-
-**Output options:**
-
-- [OK] → move to Stage 4.
-- [Fixes] → return to 3.1–3.6, reform tasks.
 
 **Status:** mark `[V] Task creation [model]`, `[V] Task review [model]` and `[V] User task review`.
 
@@ -511,35 +395,21 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer` (coordination), `inc-executor` (execution), `inc-reviewer` (review)
 
 **What the engineer does:**
-
 4.0 **Synthesis check (inc-rule-synthesis)** — if executing together with another methodology/skill, follow the joint-work instruction's step mapping; if none detected — skip.
-
 4.1 **Execution mode selection** — ask the user how to execute the task (`inc-rule-ask`). Offer 4 options with codes:
    - **[A] automatic** — execute automatically by the scheme with subagents (`inc-executor` by `## Execution scheme`). **Default mode** — preferred for this methodology;
    - **[B] step by step** — sequentially, asking the user for permission to move to the next step;
    - **[C] inline** — execute without subagents (the engineer does it in the chat; higher risk of hallucinations since there is no independent check). **Anti-pattern for this methodology** — use only when the user explicitly insists or the task is trivial;
    - **[D] show task details** — first show task details in the chat, then choose the mode.
-
    If the user does not specify a mode — default to **[A] automatic** (do not silently fall back to inline).
-
 4.2 **Execution** — execute the task in the chosen mode. In automatic mode — follow `## Execution scheme` from `technical-task.md`: launch subagents with role `inc-executor` by `inc-rule-subagent-launch`, observing sequential (→) and parallel (||) phases.
-
 4.3 **Review** — launch a subagent with role `inc-reviewer` to review the completed work (`inc-rule-subagent-launch`).
-
 4.4 **Fixing problems** — fix the found problems.
-
 4.5 **Final report** — form the final brief report (final report template).
-
 4.6 **User result review** — after the self-review and fixing problems, show the result to the user and ask them to confirm the outcome (`inc-rule-ask`). The user chooses one of:
-   - **[Done]** — everything is done, the task can be closed. The user assesses the attempt level (High / Medium / Low) and confirms closing;
+   - **[Done]** — everything is done, the task can be closed. The user assesses the attempt level (High / Medium / Low) and confirms closing; rename the attempt to `try-{N}-High-{description}` / `try-{N}-Medium-{description}` / `try-{N}-Low-{description}` (`inc-rule-attempt-naming`);
    - **[Rework]** — rework is needed: the user points out what to fix, return to 4.2 (or 4.4) and continue;
-   - **[Fail]** — close the task as failed (Low), without further rework.
-
-**Output options:**
-
-- [Done] → move to Stage 5 (Closing), rename the attempt to `try-{N}-High-{description}` / `try-{N}-Medium-{description}` / `try-{N}-Low-{description}` per the user's assessment (`inc-rule-attempt-naming`).
-- [Rework] → return to 4.2 (execution) or 4.4 (fixing problems) and continue.
-- [Fail] → rename to `try-{N}-Low-{description}` (`inc-rule-attempt-naming`), move to Stage 5 (Closing).
+   - **[Fail]** — close the task as failed (Low), rename to `try-{N}-Low-{description}` (`inc-rule-attempt-naming`), move to Stage 5 (Closing).
 
 **Status:** mark `[V] Execution [model]`, `[V] Execution review [model]` and `[V] User result review`.
 
@@ -550,13 +420,9 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer`
 
 **What the engineer does:**
-
 4a.0 **Synthesis check (inc-rule-synthesis)** — if a joint-work instruction was created, keep it in sync with any methodology changes; if none — skip.
-
 4a.1 **Rules extract** — extract rules from the completed work (`inc-rule-extract`). Extracted rules are NOT `inc-rule-{slug}` (internal methodology rules), but rules extracted from a specific inception while working with the user.
-
 4a.2 **Saving rules** — save each rule to a file `spawn/rules/{SLUG}-{N}-{description}.md` — one rule per file (`inc-rule-extract`). The file name and rule composition are refined while working with the user. After writing — call `spawn refresh` to re-render skills.
-
 4a.3 **Documentation update** — update necessary documentation (overview, technical-task, result, motivation at closing).
 
 **Status:** mark `[V] Documentation update & rules extract [model]`.
@@ -568,23 +434,17 @@ The engineer accepts the user request and classifies it:
 **Executor:** `inc-engineer`
 
 **What the engineer does:**
-
 5.0 **Synthesis check (inc-rule-synthesis)** — if synchronous work was used, note in the final report how the two methodologies interleaved; if none — skip.
-
 5.1 **Artifact analysis** — analyze the obtained work artifact.
-
 5.2 **Showing the user** — show the user:
    - success in solving the problem / not success;
    - reasons why success was not achieved;
    - highlighted problems;
    - a proposal to continue the solution cycle in the next task, but taking into account the previous work and context of all steps and problems from the previous task.
-
 5.3 **Folder rename** — rename the attempt folder to the corresponding status (Low/Medium/High) (`inc-rule-attempt-naming`).
-
 5.4 **Filling motivation.md** — when closing the inception, fill `## Result` in `motivation.md` (VERY briefly: how it was implemented, what was done, pointing to the successful attempt) and mark `[V] Closed`.
 
 **Output options:**
-
 - Inception closed → finish.
 - Continue the cycle → create a new attempt `try-{N}-New-{description}` (`inc-rule-attempt-naming`) and start from Stage 2.
 
@@ -592,20 +452,9 @@ The engineer accepts the user request and classifies it:
 
 ---
 
-## Cycle result (showing the user)
-
-After receiving the work artifact, the engineer analyzes it and shows the user:
-- success in solving the problem / not success;
-- reasons why success was not achieved;
-- highlighted problems;
-- a proposal to continue the solution cycle in the next task, but taking into account the previous work and context of all steps and problems from the previous task.
-
 ## Stage statuses
 
-All stages are marked with the `[V]` status (`inc-rule-status`). Rules are formed by the `inc-rule-{slug}` principle, roles — by the `inc-{role_name}` principle.
-
-Attempt status sequence:
-Research → Research review → User research review → Task creation → Task review → User task review → Execution → Execution review → User result review → Final report → Documentation update & rules extract.
+All stages are marked with the `[V]` status (`inc-rule-status`). Rules are formed by the `inc-rule-{slug}` principle, roles — by the `inc-{role_name}` principle. The attempt status sequence is listed in "Naming rules" below.
 
 ---
 
@@ -812,7 +661,7 @@ Fill the report by the "Final report to the user" template from `inceptions/temp
 
 ## Naming rules
 
-- **Attempts:** `try-{N}-Low-{description}`, `try-{N}-Medium-{description}`, `try-{N}-High-{description}`, `try-{N}-New-{description}`.
+- **Attempts:** `try-{N}-Low-{description}`, `try-{N}-Medium-{description}`, `try-{N}-High-{description}`, `try-{N}-New-{description}` (`inc-rule-attempt-naming`).
 - **Roles:** `inc-{role_name}` (inc-engineer, inc-explorer, inc-researcher, inc-executor, inc-reviewer).
 - **Agent slug:** `{agent-slug}` — one-word slug of the agent's goal, assigned to each role subagent at launch (`inc-rule-agent-slug`).
 - **Research files:** `{task-descr-slug}.{agent-slug}.md` in the attempt's `res/` folder (`inc-rule-res-file`), where `{task-descr-slug}` — slug of the direction/task, `{agent-slug}` — one-word slug of the agent's goal.
