@@ -40,7 +40,7 @@ By the `[V]` statuses in `overview.md`, determine at which stage the work stoppe
 
 1. Read `inceptions/main.md` fully.
 2. Clarify the active attempt (see above).
-3. Determine the current stage by statuses.
+3. Determine the current stage by statuses (see above).
 4. Tell the user where the work stopped and what is proposed next.
 5. Propose to continue from the needed stage (per `inceptions/main.md`).
 

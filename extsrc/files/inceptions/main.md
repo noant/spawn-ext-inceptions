@@ -50,16 +50,7 @@ Role identifiers: `inc-{role_name}`. Rules: `inc-rule-{slug}`.
 
 ### When to launch which role (phases and roles)
 
-The subagent role is determined by the process phase and the need for decomposition. The phase is determined by the request type (A question / B initiative) and the current stage. Research roles (`inc-explorer` vs `inc-researcher`) differ only in the right to create subagents: `inc-explorer` when research requires decomposition into independent sub-lines; `inc-researcher` when research is narrow, single-line, without nested subagents.
-
-| Phase / stage | Role | When |
-|---|---|---|
-| Research (Stage 2, waves) | `inc-explorer` or `inc-researcher` | data/hypotheses needed; explorer — for decomposition, researcher — for a narrow question |
-| Task creation (Stage 3) | `inc-explorer`/`inc-researcher` (engineering research) + `inc-reviewer` (task review) | refine wording, check tasks |
-| Execution (Stage 4) | `inc-executor` (execution) + `inc-reviewer` (review) | task formulated as a spec with instructions and acceptance criteria |
-| Review (Research/Task/Execution review) | `inc-reviewer` | check research/tasks/work |
-
-`inc-executor` — only at Stages 3–4 (task creation/execution), NOT for research; chosen when the task is a spec with clear instructions and acceptance criteria. `inc-reviewer` — at review stages (Research review, Task review, Execution review).
+See `inc-rule-role-choice`.
 
 ## Rules
 
@@ -84,6 +75,7 @@ Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
 - The prompt starts with an Ambient rules block (see `inc-rule-ambient`), then role-specific instructions (task/direction/review template).
 - A subagent cannot launch an ask tool or platform tool for questions (`inc-rule-no-ask-tool`).
 - A subagent passes the report to the parent by the strict template of its role.
+- The detailed launch order is in `inc-rule-subagent-run`.
 
 ### inc-rule-subagent-depth
 - Limits subagent nesting depth — prevents uncontrolled hierarchy growth.
@@ -93,6 +85,19 @@ Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
 - `inc-executor` — does not create subagents (performs the task itself).
 - `inc-reviewer` — can call researcher subagents (`inc-explorer` or `inc-researcher`) if needed, but no deeper.
 - Violating this rule is a defect: a subagent that created a forbidden descendant must immediately stop and return an error to the parent.
+
+### inc-rule-role-choice
+- The subagent role is determined by the process phase and the need for decomposition. The phase is determined by the request type (A question / B initiative) and the current stage.
+- Research roles (`inc-explorer` vs `inc-researcher`) differ only in the right to create subagents: `inc-explorer` when research requires decomposition into independent sub-lines; `inc-researcher` when research is narrow, single-line, without nested subagents.
+
+| Phase / stage | Role | When |
+|---|---|---|
+| Research (Stage 2, waves) | `inc-explorer` or `inc-researcher` | data/hypotheses needed; explorer — for decomposition, researcher — for a narrow question |
+| Task creation (Stage 3) | `inc-explorer`/`inc-researcher` (engineering research) + `inc-reviewer` (task review) | refine wording, check tasks |
+| Execution (Stage 4) | `inc-executor` (execution) + `inc-reviewer` (review) | task formulated as a spec with instructions and acceptance criteria |
+| Review (Research/Task/Execution review) | `inc-reviewer` | check research/tasks/work |
+
+- `inc-executor` — only at Stages 3–4 (task creation/execution), NOT for research; chosen when the task is a spec with clear instructions and acceptance criteria. `inc-reviewer` — at review stages (Research review, Task review, Execution review).
 
 ### inc-rule-ambient
 - Ambient context — session/environment facts for subagents (repository name, session_id, etc.), not coding conventions or task design rules.
@@ -162,6 +167,15 @@ Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
 - The file is registered in `spawn/navigation.yaml` under `read-contextual`, read when the two methodologies are used simultaneously.
 - Do not create an instruction for a methodology already covered by an existing `spawn/rules/` file — reuse it (reuse-check).
 
+### inc-rule-synthesis-check
+- The canonical "Synthesis check" step, run at the start of every stage (Stage 0 through Stage 5, each as step `X.0`).
+- If the request/stage involves another methodology/skill/instruction runnable in synthesis with inceptions — offer synchronous work (see "Synchronous work with another methodology").
+- If none is detected — skip entirely (no-op); continue the normal stage flow.
+- In stages where a joint-work instruction was already created (Stage 3–5), instead of offering, ensure the instruction is available and applied (follow its step mapping).
+- In Stage 4a, if a joint-work instruction was created, keep it in sync with any methodology changes.
+- In Stage 5, if synchronous work was used, note in the final report how the two methodologies interleaved.
+- Each stage references this rule instead of repeating the block: `X.0 Synthesis check — see inc-rule-synthesis-check`.
+
 ### inc-rule-attempt-naming
 - Attempt name: `try-{N}-{Level}-{description}`, where `{Level}` ∈ {Low, Medium, High, New}.
 - `Low` — completed with almost no benefit.
@@ -169,6 +183,15 @@ Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
 - `High` — successful solution of the task.
 - `New` — new task (slug — new task).
 - After the attempt completes, the folder is renamed from `New` to the corresponding status (Low/Medium/High).
+
+### inc-rule-naming
+- **Attempts:** `try-{N}-Low-{description}`, `try-{N}-Medium-{description}`, `try-{N}-High-{description}`, `try-{N}-New-{description}` (`inc-rule-attempt-naming`).
+- **Roles:** `inc-{role_name}` (inc-engineer, inc-explorer, inc-researcher, inc-executor, inc-reviewer).
+- **Agent slug:** `{agent-slug}` — one-word slug of the agent's goal, assigned to each role subagent at launch (`inc-rule-agent-slug`).
+- **Research files:** `{task-descr-slug}.{agent-slug}.md` in the attempt's `res/` folder (`inc-rule-res-file`), where `{task-descr-slug}` — slug of the direction/task, `{agent-slug}` — one-word slug of the agent's goal.
+- **Internal methodology rules:** `inc-rule-{slug}` (inc-rule-ask, inc-rule-ambient, etc.), described in this document.
+- **Extracted inception rules:** `{SLUG}-{N}-{description}`, stored in `spawn/rules/{SLUG}-{N}-{description}.md`.
+- **Stage statuses:** Research → Research review → User research review → Task creation → Task review → User task review → Execution → Execution review → User result review → Final report → Documentation update & rules extract.
 
 ### inc-rule-status
 - Statuses are marked `[V]` upon stage completion, with the model in parentheses (`[model-name]`).
@@ -180,23 +203,20 @@ Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
 - The question is asked only in text in the subagent's response (`inc-rule-no-ask-tool`).
 - The subagent does not block work indefinitely: if the answer is critical — it stops and returns the question to the parent.
 
-## Subagent run protocol
-
-Applies to every subagent launch of any role (`inc-explorer`, `inc-researcher`, `inc-executor`, `inc-reviewer` and further nesting). Consolidates launch order (`inc-rule-subagent-launch`, `inc-rule-ambient`).
-
+### inc-rule-subagent-run
+- Applies to every subagent launch of any role (`inc-explorer`, `inc-researcher`, `inc-executor`, `inc-reviewer` and further nesting). Consolidates launch order (`inc-rule-subagent-launch`, `inc-rule-ambient`).
 1. **Resolve Ambient context** — determine it by `inc-rule-ambient` (clarify via `inc-rule-ask` if absent; skip when `Ambient context: none`).
 2. **Ambient at the start of the prompt** — put the resolved Ambient block at the start of the subagent prompt (verbatim `Ambient rules: …` or `Ambient context: none`).
 3. **Role instructions** — then add role-specific instructions (`inc-rule-model-line`, `inc-rule-changed-files`, task/direction/review template, etc.).
 4. **Pass to children unchanged** — each agent passes received Ambient context to every child subagent unchanged — same wording, same order; do not drop, shorten, or rewrite.
 
-## Done-marking protocol (marking subtask completion)
-
-Adaptation of R15-done-marking from `spec/main.md` to the inception structure, where tasks are bullet lines in `technical-task.md` (not separate files).
-
+### inc-rule-done-marking
+- Adaptation of R15-done-marking from `spec/main.md` to the inception structure, where tasks are bullet lines in `technical-task.md` (not separate files).
 - After an executor completes a subtask, the engineer (`inc-engineer`) marks `[V]` at the start of the task line in `technical-task.md` and records `Used model: {model}` next to it (from `inc-rule-model-line`).
 - Only `inc-engineer` marks `[V]` and writes `Used model` in `technical-task.md` — the executor (`inc-executor`) does not edit these fields.
 - The executor reports completion status (`Done | Partial | Failed`) and `My model:` in its report.
 - Mark immediately after the executor's response.
+- The `[V]` marking convention is `inc-rule-status`.
 
 ## Storage structure (artifacts)
 
@@ -283,7 +303,7 @@ The engineer accepts and classifies the user request:
 - **[B] Initiative / task** — the user sets an initiative in solving a problem, forms an explicit "do" request, or asks to conduct research.
 
 **What the engineer does:**
-0.0 **Synthesis check (inc-rule-synthesis)** — if the request involves another methodology/skill/instruction, offer synchronous work (see "Synchronous work with another methodology"). If none detected — skip.
+0.0 **Synthesis check** — see `inc-rule-synthesis-check`.
 1. Determines the user's language (`inc-rule-language`): if unambiguous — work in it; if ambiguous — offer a set via `inc-rule-ask`.
 2. Determines the request type (A or B).
 3. If unclear — asks basic clarification and waits.
@@ -301,7 +321,7 @@ The engineer accepts and classifies the user request:
 **Executor:** `inc-engineer`
 
 **What the engineer does:**
-1.0 **Synthesis check (inc-rule-synthesis)** — if the question involves another methodology/skill, offer synchronous work; if none detected — skip.
+1.0 **Synthesis check** — see `inc-rule-synthesis-check`.
 1.1 **Clarification** — if unclear, ask basic clarification and wait.
 1.2 **Question decomposition** — split the question into sub-questions.
 1.3 **Organizing researchers** — organize a researcher subagent (`inc-explorer`) or a team (launch by `inc-rule-subagent-launch`, `inc-rule-ambient`, `inc-rule-model-line`).
@@ -322,7 +342,7 @@ The engineer accepts and classifies the user request:
 **Executor:** `inc-engineer` (coordination), `inc-explorer` (research), `inc-reviewer` (review)
 
 **What the engineer does:**
-2.0 **Synthesis check (inc-rule-synthesis)** — if the initiative involves another methodology/skill, offer synchronous work; if none detected — skip.
+2.0 **Synthesis check** — see `inc-rule-synthesis-check`.
 2.1 **Initiative clarification** — clarify the initiative, ask for motivation and necessary questions (`inc-rule-ask`: ask the user, not subagents).
 2.2 **Base documentation creation (mandatory, before any research)** — create the attempt's base documentation by templates (`inc-rule-paths`). MUST precede any researcher launch:
    - if first attempt of first inception — create `inceptions/{N}-{inception-slug}/` and `motivation.md`;
@@ -361,7 +381,7 @@ The engineer accepts and classifies the user request:
 **Executor:** `inc-engineer` (coordination), `inc-explorer` (engineering research), `inc-reviewer` (task review)
 
 **What the engineer does:**
-3.0 **Synthesis check (inc-rule-synthesis)** — if the task involves another methodology/skill, ensure the joint-work instruction is available and applied; if none — skip.
+3.0 **Synthesis check** — see `inc-rule-synthesis-check`.
 3.1 **Spec formation** — form the high-level technical task in the attempt's `technical-task.md` from the research.
 3.2 **Subtask formation** — form subtasks for executor subagents (`inc-executor`).
 3.3 **Agent specification** — in the task template specify: suggested agent, used agent, etc.
@@ -382,7 +402,7 @@ The engineer accepts and classifies the user request:
 **Executor:** `inc-engineer` (coordination), `inc-executor` (execution), `inc-reviewer` (review)
 
 **What the engineer does:**
-4.0 **Synthesis check (inc-rule-synthesis)** — if executing together with another methodology/skill, follow the joint-work instruction's step mapping; if none — skip.
+4.0 **Synthesis check** — see `inc-rule-synthesis-check`.
 4.1 **Execution mode selection** — ask the user how to execute the task (`inc-rule-ask`). Offer 4 options with codes:
    - **[A] automatic** — execute automatically by the scheme with subagents (`inc-executor` by `## Execution scheme`). **Default mode** — preferred for this methodology;
    - **[B] step by step** — sequentially, asking the user for permission to move to the next step;
@@ -407,7 +427,7 @@ The engineer accepts and classifies the user request:
 **Executor:** `inc-engineer`
 
 **What the engineer does:**
-4a.0 **Synthesis check (inc-rule-synthesis)** — if a joint-work instruction was created, keep it in sync with any methodology changes; if none — skip.
+4a.0 **Synthesis check** — see `inc-rule-synthesis-check`.
 4a.1 **Rules extract** — extract rules from the completed work (`inc-rule-extract`). Extracted rules are NOT `inc-rule-{slug}` (internal methodology rules), but rules extracted from a specific inception while working with the user.
 4a.2 **Saving rules** — save each rule to a file `spawn/rules/{SLUG}-{N}-{description}.md` — one rule per file (`inc-rule-extract`). The file name and rule composition are refined while working with the user. After writing — call `spawn refresh` to re-render skills.
 4a.3 **Documentation update** — update necessary documentation (overview, technical-task, result, motivation at closing).
@@ -421,7 +441,7 @@ The engineer accepts and classifies the user request:
 **Executor:** `inc-engineer`
 
 **What the engineer does:**
-5.0 **Synthesis check (inc-rule-synthesis)** — if synchronous work was used, note in the final report how the two methodologies interleaved; if none — skip.
+5.0 **Synthesis check** — see `inc-rule-synthesis-check`.
 5.1 **Artifact analysis** — analyze the obtained work artifact.
 5.2 **Showing the user** — show the user:
    - success in solving the problem / not success;
@@ -441,7 +461,7 @@ The engineer accepts and classifies the user request:
 
 ## Stage statuses
 
-All stages are marked with the `[V]` status (`inc-rule-status`). Rules are formed by the `inc-rule-{slug}` principle, roles — by the `inc-{role_name}` principle. The attempt status sequence is listed in "Naming rules" below.
+All stages are marked with the `[V]` status (`inc-rule-status`). Rules are formed by the `inc-rule-{slug}` principle, roles — by the `inc-{role_name}` principle. The attempt status sequence is listed in `inc-rule-naming`.
 
 ---
 
@@ -461,6 +481,24 @@ Templates live in `inceptions/templates/`:
 
 Input prompts (task/direction/review) are described below; response templates (Output format) are the files listed above.
 
+### Common subagent prompt blocks
+
+The four input templates below (executor, explorer, researcher, reviewer) share common blocks. These blocks are defined once here and referenced by each template as `{common-rules}`, `{common-ask}`, `{common-forbidden}`.
+
+**`{common-rules}`** — "Rules to follow" block, role-specific (each template lists its own items):
+- Cannot create subagents / can create only `inc-researcher` / can call researcher subagents — per `inc-rule-subagent-depth` (see each template's "Subagents you may call").
+- Read-only (research roles), except creating a research file in the attempt's `res/` (`inc-rule-res-file`).
+- Cannot use the ASK tool or a platform tool for questions (`inc-rule-no-ask-tool`).
+- Ask questions only in text in the response to the parent (`inc-rule-ask-if-unclear`).
+- At the end of the response add the line `My model: X` with the real model identifier (`inc-rule-model-line`).
+- (executor only) List all created/changed files in the report (`inc-rule-changed-files`).
+
+**`{common-ask}`** — "Ask if unclear" block:
+- Allowed to ask the parent a question if something is unclear.
+
+**`{common-forbidden}`** — "Forbidden" block:
+- Forbidden to ask a question via the ASK tool or any platform tool for questions (AskQuestion, ask_question, AskUserQuestion, request_user_input, etc.). Questions are asked only in text in the subagent's response to the parent.
+
 ### Task template for the executor (inc-executor) — input
 
 ```markdown
@@ -472,11 +510,7 @@ Input prompts (task/direction/review) are described below; response templates (O
 You are an executor subagent (inc-executor). Role: `inc-executor`. Agent slug: `{agent-slug}` (one word — your goal) (`inc-rule-agent-slug`).
 
 ## Rules to follow
-- You cannot create subagents (`inc-rule-subagent-depth`). You work only independently.
-- You cannot use the ASK tool or a platform tool for questions (`inc-rule-no-ask-tool`).
-- You ask questions only in text in your response to the parent (`inc-rule-ask-if-unclear`).
-- At the end of the response add the line `My model: X` with your real model identifier (`inc-rule-model-line`).
-- List all created/changed files in the report (`inc-rule-changed-files`).
+{common-rules — executor variant: no subagents, list changed files}
 
 ## Subagents you may call
 - None. You are an executor, you work independently (`inc-rule-subagent-depth`).
@@ -497,9 +531,9 @@ You are an executor subagent (inc-executor). Role: `inc-executor`. Agent slug: `
 {Acceptance criteria — how to understand that the task is done correctly.}
 
 ## Ask if unclear
-{Allowed to ask a question if something is unclear.}
+{common-ask}
 
-**Forbidden:** to ask a question via the ASK tool or any platform tool for questions (AskQuestion, ask_question, AskUserQuestion, request_user_input, etc.). Questions are asked only in text in the subagent's response to the parent.
+{common-forbidden}
 
 ## Output format
 Fill the report by the "Executor report (inc-executor)" template from `inceptions/templates/executor-report.md`.
@@ -516,11 +550,7 @@ Fill the report by the "Executor report (inc-executor)" template from `inception
 You are a coordinating researcher subagent (inc-explorer). Role: `inc-explorer`. Agent slug: `{agent-slug}` (one word — your goal) (`inc-rule-agent-slug`).
 
 ## Rules to follow
-- You can create subagents only of role `inc-researcher` (`inc-rule-subagent-depth`). Creating other roles is forbidden.
-- You do not modify the system (read-only), except creating a research file in the attempt's `res/` (`inc-rule-res-file`).
-- You cannot use the ASK tool or a platform tool for questions (`inc-rule-no-ask-tool`).
-- You ask questions only in text in your response to the parent (`inc-rule-ask-if-unclear`).
-- At the end of the response add the line `My model: X` with your real model identifier (`inc-rule-model-line`).
+{common-rules — explorer variant: can create only inc-researcher, read-only except res/}
 
 ## Subagents you may call
 - `inc-researcher` — executing researcher: narrow single-line research, does not create subagents. Use to decompose research into independent sub-lines.
@@ -541,9 +571,9 @@ You are a coordinating researcher subagent (inc-explorer). Role: `inc-explorer`.
 {What not to touch, search boundaries.}
 
 ## Ask if unclear
-{Allowed to ask the parent a question if something is unclear.}
+{common-ask}
 
-**Forbidden:** to ask a question via the ASK tool or any platform tool for questions (AskQuestion, ask_question, AskUserQuestion, request_user_input, etc.). Questions are asked only in text in the subagent's response to the parent.
+{common-forbidden}
 
 ## Research file (mandatory)
 Write the full research to the attempt's file: `res/{task-descr-slug}.{agent-slug}.md` (`inc-rule-res-file`).
@@ -567,11 +597,7 @@ Fill the report by the "Researcher report (inc-explorer / inc-researcher)" templ
 You are an executing researcher subagent (inc-researcher). Role: `inc-researcher`. Agent slug: `{agent-slug}` (one word — your goal) (`inc-rule-agent-slug`).
 
 ## Rules to follow
-- You are strictly forbidden to create subagents at all (`inc-rule-subagent-depth`). You work only independently.
-- You do not modify the system (read-only), except creating a research file in the attempt's `res/` (`inc-rule-res-file`).
-- You cannot use the ASK tool or a platform tool for questions (`inc-rule-no-ask-tool`).
-- You ask questions only in text in your response to the parent (`inc-rule-ask-if-unclear`).
-- At the end of the response add the line `My model: X` with your real model identifier (`inc-rule-model-line`).
+{common-rules — researcher variant: strictly no subagents, read-only except res/}
 
 ## Subagents you may call
 - None. You are an executing researcher, you work independently (`inc-rule-subagent-depth`).
@@ -592,9 +618,9 @@ You are an executing researcher subagent (inc-researcher). Role: `inc-researcher
 {What not to touch, search boundaries.}
 
 ## Ask if unclear
-{Allowed to ask the parent a question if something is unclear.}
+{common-ask}
 
-**Forbidden:** to ask a question via the ASK tool or any platform tool for questions (AskQuestion, ask_question, AskUserQuestion, request_user_input, etc.). Questions are asked only in text in the subagent's response to the parent.
+{common-forbidden}
 
 ## Research file (mandatory)
 Write the full research to the attempt's file: `res/{task-descr-slug}.{agent-slug}.md` (`inc-rule-res-file`).
@@ -620,10 +646,7 @@ When creating several researchers — set each its own line (e.g., 3 different l
 You are a reviewer subagent (inc-reviewer). Role: `inc-reviewer`. Agent slug: `{agent-slug}` (one word — your goal) (`inc-rule-agent-slug`).
 
 ## Rules to follow
-- You can call researcher subagents (`inc-explorer` or `inc-researcher`) if needed, but no deeper (`inc-rule-subagent-depth`).
-- You cannot use the ASK tool or a platform tool for questions (`inc-rule-no-ask-tool`).
-- You ask questions only in text in your response to the parent (`inc-rule-ask-if-unclear`).
-- At the end of the response add the line `My model: X` with your real model identifier (`inc-rule-model-line`).
+{common-rules — reviewer variant: can call researcher subagents, no deeper}
 
 ## Subagents you may call
 - `inc-explorer` — coordinating researcher: searches for data, checks hypotheses, decomposes research into sub-lines. Can create only `inc-researcher`.
@@ -648,10 +671,4 @@ Fill the report by the "Final report to the user" template from `inceptions/temp
 
 ## Naming rules
 
-- **Attempts:** `try-{N}-Low-{description}`, `try-{N}-Medium-{description}`, `try-{N}-High-{description}`, `try-{N}-New-{description}` (`inc-rule-attempt-naming`).
-- **Roles:** `inc-{role_name}` (inc-engineer, inc-explorer, inc-researcher, inc-executor, inc-reviewer).
-- **Agent slug:** `{agent-slug}` — one-word slug of the agent's goal, assigned to each role subagent at launch (`inc-rule-agent-slug`).
-- **Research files:** `{task-descr-slug}.{agent-slug}.md` in the attempt's `res/` folder (`inc-rule-res-file`), where `{task-descr-slug}` — slug of the direction/task, `{agent-slug}` — one-word slug of the agent's goal.
-- **Internal methodology rules:** `inc-rule-{slug}` (inc-rule-ask, inc-rule-ambient, etc.), described in this document.
-- **Extracted inception rules:** `{SLUG}-{N}-{description}`, stored in `spawn/rules/{SLUG}-{N}-{description}.md`.
-- **Stage statuses:** Research → Research review → User research review → Task creation → Task review → User task review → Execution → Execution review → User result review → Final report → Documentation update & rules extract.
+See `inc-rule-naming`.
