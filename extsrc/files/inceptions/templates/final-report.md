@@ -18,8 +18,8 @@ Response template (Output format) that the `inc-engineer` fills when showing the
 {Highlighted problems that surfaced.}
 
 ## Next step proposal
-{Proposal to continue the cycle in the next task — taking into account the previous work and context of all steps and problems.}
+{Proposal to continue the cycle in the next attempt — taking into account the previous work and context of all steps and problems.}
 
 ## Extracted rules
-{Extracted inc-rule-{slug} rules, if any.}
+{Extracted rules, if any.}
 ```

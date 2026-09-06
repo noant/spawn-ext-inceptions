@@ -1,674 +1,598 @@
-# Inception Manager: subagent manager methodology
+# Inceptions: AI-Oriented Methodology for Non-Coding Work
 
-The `inception-manager` skill instructs the LLM to work as a subagent manager. The main chat is the Engineer agent (inc-engineer); the user interacts only with it.
+The `inceptions` methodology instructs the LLM to work as a subagent manager to solve non-coding tasks: research, documentation, planning, and other work. The main chat is the Engineer agent (`A1-drafter`); the user interacts only with it.
 
-## Subagent roles
+## Folder Structure
 
-Role identifiers: `inc-{role_name}`. Rules: `inc-rule-{slug}`.
+- `inceptions/main.md` — this file.
+- `inceptions/templates/` — artifact and response templates (see `## Templates`).
+- `inceptions/{N}-{inception-slug}/` — inception folder. `{N}` is the inception number; `{inception-slug}` is a short descriptive name.
+- `inceptions/{N}-{inception-slug}/motivation.md` — inception motivation (required).
+- `inceptions/{N}-{inception-slug}/{N}-{description}/` — attempt folder. `{N}` is the attempt number within the inception; `{description}` is a short descriptive name.
+- `inceptions/{N}-{inception-slug}/{N}-{description}/overview.md` — attempt overview (required).
+- `inceptions/{N}-{inception-slug}/{N}-{description}/{N}-{description}.md` — subtask files (optional; required when the attempt has 2+ subtasks).
+- `inceptions/{N}-{inception-slug}/{N}-{description}/res/{research}.md` — research files (optional; created by research subagents).
 
-### inc-engineer (Engineer) — main chat
-- Takes research results and work context as input; synthesizes them and forms a task list for executors.
-- Can do small research itself or modify the system; can intervene in any process it deems necessary.
-- Proposes a task solution based on research and already-used suitable experiences.
-- Can run several research cycles; between them asks the user about acceptability of potential solutions and consults on the preferred next step.
-- Creates tasks for researchers, receives research, synthesizes tasks for executors, receives the work artifact, analyzes it, shows the result to the user.
-- **Synthesis with other methodologies:** can work with other methodologies (e.g., `spec/main.md`, Spawn methodologies) — run them with the user, conduct research, accompany task management and execution.
-- **Finding a suitable methodology:** analyzes available methodologies and proposes the most suitable one (or combination) for a problem/task.
+**Embedded rules:**
 
-**Roles inc-engineer can call** (`inc-rule-subagent-depth`):
-- `inc-explorer` — coordinating researcher: searches data, checks hypotheses, decomposes research into sub-lines. Can create only `inc-researcher`.
-- `inc-researcher` — executing researcher: narrow single-line research. Does not create subagents.
-- `inc-executor` — executor: performs a task by a clear technical task (spec). Does not create subagents.
-- `inc-reviewer` — reviewer: reviews research/tasks/work. Can call `inc-explorer`/`inc-researcher`.
+Every rule has a stable label `[R{n}-{slug}]`.
 
-**Researcher selection preference:** `inc-explorer` (decomposition into lines) > `inc-researcher` (narrow, single-line) > inline (one-off simple operations where launching a subagent is excessive).
+_Folder hygiene_
 
-### inc-explorer (Coordinating researcher)
-- Actively uses available information to find data; generates and checks hypotheses by association.
-- Uses: web search, file and session search, available tools, workspaces, git repositories, user data.
-- Read-only, except creating a research file in the attempt's `res/` (`inc-rule-res-file`).
-- Before searching, a direction line is created (e.g., 3 subagents — 3 lines), or no direction is set (be free).
-- Collects facts from encountered texts and search results, classifies their importance.
-- Passes results to the parent via a research file in the attempt's `res/` (`inc-rule-res-file`): `res/{task-descr-slug}.{agent-slug}.md`, linking the file in the report.
-- On launch receives the role `inc-explorer` and the agent slug `{agent-slug}` — a one-word slug of the goal (`inc-rule-agent-slug`).
-- **Nesting restriction:** among subagents can create only `inc-researcher` (`inc-rule-subagent-depth`); other roles forbidden.
+- **`R1-paths`**
+  - under `inceptions/`, only paths allowed by the Folder Structure are permitted
+  - no other files
+- **`R2-no-clutter`**
+  - do not create READMEs or other extraneous docs under `inceptions/`
+  - special case of `R1-paths`
 
-### inc-researcher (Executing researcher)
-- Can and must do everything `inc-explorer` does: search data, generate/check hypotheses, use web search, workspaces, git repositories, user data, collect and classify facts, pass results via a research file in the attempt's `res/` (`inc-rule-res-file`).
-- Read-only, except creating a research file in the attempt's `res/` (`inc-rule-res-file`).
-- On launch receives the role `inc-researcher` and the agent slug `{agent-slug}` — a one-word slug of the goal (`inc-rule-agent-slug`).
-- **Strictly forbidden to create subagents at all** (`inc-rule-subagent-depth`); works only independently.
+_Inception identification_
 
-### inc-executor (Executor)
-- Performs work by order with clear instructions; can ask a clarifying question.
-- Accepts a task by a clear template and reports by a clear template at the output.
-- On launch receives the role `inc-executor` and the agent slug `{agent-slug}` — a one-word slug of the goal (`inc-rule-agent-slug`).
+- **`R3-inception-num`**
+  - for numeric `{N}` in `inceptions/{N}-{inception-slug}/`: suggest the next number (`R10-ask`)
+  - wait for an explicit reply before creating the folder
+  - next number = highest existing `{N}` under `inceptions/` plus 1
+- **`R4-attempt-num`**
+  - for numeric `{N}` in `{N}-{description}/` (attempt): next number = highest existing `{N}` under the inception plus 1
+  - no external tracker keys apply; attempts are numbered sequentially within an inception
 
-### inc-reviewer (Reviewer)
-- Reviews research results, formed tasks, completed work; can call researcher subagents if needed.
-- On launch receives the role `inc-reviewer` and the agent slug `{agent-slug}` — a one-word slug of the goal (`inc-rule-agent-slug`).
+_Attempt specs_
 
-### When to launch which role (phases and roles)
+- **`R5-new-attempt`**
+  - new attempts follow Step 1 and the overview template at the end of this file
+- **`R6-process`**
+  - status marks `[V]` and user prompts must reproduce the wording from the corresponding Step exactly
+  - Steps run in order unless the process explicitly allows otherwise
+- **`R7-concrete`**
+  - specs are executable edits, not intentions
+  - every overview and subtask names concrete artifacts, paths, and deliverables under change
+  - every Before / After pair in subtasks is a fenced minimal excerpt (real lines or the exact replacement) plus a behavior line
+  - prose-only or "change X to Y" without concrete content is invalid
+- **`R8-greenfield`**
+  - for new artifacts, same Before/After discipline as `R7-concrete`, with two differences:
+  - Before may be insertion-context only (nothing to quote)
+  - After is still fenced content plus a behavior line
 
-See `inc-rule-role-choice`.
+_Interaction and context_
 
-## Rules
+- **`R9-ask`**
+  - when you must ask the user (clarifications, confirmations, choices), **stop and request from the user**
+  - do not continue the workflow until they answer
+  - prefer the platform structured ask tool (see `R11-ask-tools`), multiple choice when possible
+  - fallback order: platform tool -> **direct request to the user in your reply**
+  - "Ask" / "request from the user" means only those channels
+  - **never** treat asking as launching a Task / sub-agent / other agent; those tools are not ask tools
+  - if no platform ask tool is available, stop, request from the user, then wait
+  - do not ask when the answer is clear from context; ask only when the answer materially changes the next action
+- **`R10-navigation`**
+  - before drafting an attempt, open **`spawn/navigation.yaml`**
+  - read all `read-required`
+  - read task-relevant `read-contextual`
+  - apply them in the spec
+  - if the file is absent, the rule is a no-op (proceed)
+  - Spec self-review re-checks compliance; violations are defects
+- **`R11-ask-tools`**
+  - user-question tools by platform (data for `R9-ask` only):
+  - **Cursor:** AskQuestion / cursor/ask_question
+  - **VS Code/Copilot:** AskQuestions / vscode_askQuestions
+  - **Claude Code:** AskUserQuestion
+  - **Codex:** request_user_input
+  - **Other:** IDE embedded ask tool; if none, stop and ask questions in the current chat (`R9-ask`)
+- **`R12-model-line`**
+  - every sub-agent prompt must include this line verbatim:
+    > End your final response with the line `My model: X` where X is your actual model identifier (e.g. `claude-sonnet-4-6`, `gpt-4o`) — write your actual model identifier in place of X.
+  - recording the model used by a sub-agent:
+    - if the platform tool lets you pass an explicit sub-agent `model`, record that call parameter
+    - if there is no model-selection parameter, read `My model:` from the sub-agent response and record that
+  - who writes `Used model` / `[model-name]`: see `R14-done-marking`
+- **`R13-changed-files`**
+  - after finishing a create/edit batch, list every created or edited path (repo-relative, complete, no omissions)
+  - renames and deletes count
+  - applies to Step 1 (spec), Steps 4–5 (execution), and any user-requested edits
+  - **Propagation:** the executor sub-agent includes the full list in its final response
+  - the coordinator (`A6-coordinator`) aggregates lists from child sub-agents and forwards the complete set to the user (and to its parent when the coordinator itself is a sub-agent)
+  - do not drop or summarize away paths
+- **`R14-done-marking`**
+  - after an Executor (`A5-executor`) replies, the coordinator (`A6-coordinator`) marks the subtask done:
+    - rename: `{N}-{description}.md` → `_DONE_{N}-{description}.md`
+    - set: `Used model: {model}` from `R12-model-line`; `Suggested model` unchanged
+  - only the coordinator (`A6-coordinator`) renames and writes `Used model` — the worker (`A5-executor`) must not
+  - the worker sets `Status: Done` per Step 4 Executor protocol
+  - mark immediately; do not defer
+- **`R15-ambient`**
+  - **Ambient context** is session/environment facts for sub-agents (repository name, session, and similar) — not conventions or task design rules
+  - format when present: header `Ambient rules:` then one numbered item per line (`1) …`, `2) …`):
+    ```
+    Ambient rules:
+    1) repository: {name}
+    2) session: {id}
+    ```
+  - explicit empty: `Ambient context: none` — ambient **is** set; do **not** ask
+  - if Ambient context is missing (neither an `Ambient rules:` block nor `Ambient context: none`), the agent **must** clarify via `R9-ask` before launching any sub-agent — mandatory
+  - every sub-agent launch must put the resolved Ambient block at the start of the prompt per **Subagent run protocol**
+  - each agent passes the block to child sub-agents unchanged
 
-Each rule has a stable label `inc-rule-{slug}`. Reference rules by label.
+_Subagent governance_
 
-### inc-rule-language
-- Determine the user's language from their message.
-- Work in the user's language: all responses, artifacts, questions.
-- If unambiguous — just work in it, do not offer a choice.
-- If ambiguous (mixed text, several possible languages, unclear context) — offer a set of languages via `inc-rule-ask`, formed from context (request language, repository/documentation language, project languages).
-- After the user chooses — fix it and use it throughout.
+- **`R16-classify`**
+  - at the start of any inceptions request, classify it as:
+    - **[A] Question** — the user asks (wants an answer), not a "do" request
+    - **[B] Initiative / task** — the user sets a task, an explicit "do", or asks to draft a spec
+  - if unclear, ask via `R9-ask` and wait
+  - [A] -> answer directly (light mode, no `inceptions/` artifacts); optionally launch `A2-researcher`/`A3-explorer` for read-only facts
+  - [B] -> proceed to Step 1 (Spec drafting)
+- **`R17-subagent-depth`**
+  - limits subagent nesting — who may create whom:
+  - `A1-drafter` — may launch `A2-researcher`, `A3-explorer`, `A4-reviewer`
+  - `A2-researcher` — must not create subagents (works independently)
+  - `A3-explorer` — may create only `A2-researcher`
+  - `A4-reviewer` — may launch `A2-researcher` / `A3-explorer` (to verify findings); no deeper
+  - `A5-executor` — must not create subagents (performs one subtask)
+  - `A6-coordinator` — may launch `A5-executor` and `A4-reviewer`
+  - violating this rule is a defect: a subagent that created a forbidden descendant must stop and return an error to the parent
+- **`R18-no-ask-tool`**
+  - subagents (`A2-researcher`, `A3-explorer`, `A4-reviewer`, `A5-executor`, `A6-coordinator`) are forbidden to ask questions via the ASK tool or any platform ask tool (AskQuestion, ask_question, AskUserQuestion, request_user_input, etc.)
+  - a subagent asks questions only in text in its response to the parent
+  - only the main chat (the agent coordinating the user, `A1-drafter` in current context) may use the ask tool for questions to the user
+- **`R19-ask-if-unclear`**
+  - a subagent may ask the parent a question if something in its task/direction is unclear
+  - the question is asked only in text in the subagent's response (`R18-no-ask-tool`)
+  - the subagent does not block indefinitely: if the answer is critical, it stops and returns the question to the parent; otherwise it proceeds with a stated assumption
+- **`R20-navigate`**
+  - after finishing a task/subtask, navigate the user to created/changed files via the platform navigate tool
+  - navigate to each such file with a short description (chip label)
+  - use line ranges (`from_line`/`to_line`) to point to the exact changed region when relevant
+  - for git files pass the git session id; for ws docs omit it
+  - never use navigate to read contents — only to show files in the UI
 
-### inc-rule-ask
-- When you must ask the user (clarifications, confirmations, choice) — stop and ask; do not continue until the user answers.
-- Prefer the platform structured ask tool, multiple choice when possible. Fallback order: platform tool → direct request in the response. "Ask" / "request from the user" means only these channels.
-- Never interpret "ask" as launching a Task / subagent / another agent — these are not ask tools.
-- If there is no platform ask tool — stop, ask, then wait.
-- Do not ask when the answer is clear from context. Ask only when the answer materially changes the next action; if unambiguous and the next step is determined — proceed.
+**Roles:**
 
-### inc-rule-subagent-launch
-- Each subagent launch has an explicit role: `inc-explorer`, `inc-researcher`, `inc-executor`, `inc-reviewer`.
-- The prompt starts with an Ambient rules block (see `inc-rule-ambient`), then role-specific instructions (task/direction/review template).
-- A subagent cannot launch an ask tool or platform tool for questions (`inc-rule-no-ask-tool`).
-- A subagent passes the report to the parent by the strict template of its role.
-- The detailed launch order is in `inc-rule-subagent-run`.
+Every role has a stable label `[A{n}-{slug}]`. Reference roles by label (e.g. `A1-drafter`), not by number — the label survives renumbering. One agent instance plays one role at a time.
 
-### inc-rule-subagent-depth
-- Limits subagent nesting depth — prevents uncontrolled hierarchy growth.
-- `inc-engineer` (main chat) — can create subagents of any role: `inc-explorer`, `inc-researcher`, `inc-executor`, `inc-reviewer`.
-- `inc-explorer` — can create only `inc-researcher` subagents.
-- `inc-researcher` — strictly forbidden to create subagents at all; works only independently.
-- `inc-executor` — does not create subagents (performs the task itself).
-- `inc-reviewer` — can call researcher subagents (`inc-explorer` or `inc-researcher`) if needed, but no deeper.
-- Violating this rule is a defect: a subagent that created a forbidden descendant must immediately stop and return an error to the parent.
+- **`A1-drafter`** (Drafter / Engineer)
+  - main chat coordinator
+  - researches the subject alone or via `A2-researcher` / `A3-explorer`
+  - writes the attempt specification (`overview.md`, subtasks)
+  - owns Step 1 (Spec drafting); may also close Step 7 / Pattern extract in current context
+- **`A2-researcher`** (Researcher)
+  - general open-ended research (web, docs, workspaces, hypothesis checking)
+  - read-only except the research file in `res/`
+  - no subagents
+- **`A3-explorer`** (Explorer)
+  - coordinating researcher; decomposes research into sub-lines
+  - may create only `A2-researcher`
+  - supplies accurate Before / After context, paths, and artifacts
+- **`A4-reviewer`** (Reviewer)
+  - reviews spec / work / research
+  - reviews at Spec self-review (Step 2) and Execution self-review (Step 5)
+  - may launch `A2-researcher` / `A3-explorer`; no deeper
+  - may fix defects found in that review; then stops and prompts the user
+- **`A5-executor`** (Executor)
+  - executes one subtask
+  - performs that subtask only (research, docs, planning, other work); lists changed files per `R13-changed-files`
+  - sets `Status: Done` in the subtask file; does not rename to `_DONE_` or write `Used model`
+  - no subagents
+- **`A6-coordinator`** (Coordinator)
+  - coordinates Executors (`A5-executor`) per the subtask list
+  - owns Steps 4–5 end-to-end: launch Executors, `R14-done-marking`, launch Reviewer for Step 5
+  - may launch `A5-executor` and `A4-reviewer`
+  - must not be the same agent instance as `A1-drafter`
 
-### inc-rule-role-choice
-- The subagent role is determined by the process phase and the need for decomposition. The phase is determined by the request type (A question / B initiative) and the current stage.
-- Research roles (`inc-explorer` vs `inc-researcher`) differ only in the right to create subagents: `inc-explorer` when research requires decomposition into independent sub-lines; `inc-researcher` when research is narrow, single-line, without nested subagents.
+**Subagent run protocol**
 
-| Phase / stage | Role | When |
-|---|---|---|
-| Research (Stage 2, waves) | `inc-explorer` or `inc-researcher` | data/hypotheses needed; explorer — for decomposition, researcher — for a narrow question |
-| Task creation (Stage 3) | `inc-explorer`/`inc-researcher` (engineering research) + `inc-reviewer` (task review) | refine wording, check tasks |
-| Execution (Stage 4) | `inc-executor` (execution) + `inc-reviewer` (review) | task formulated as a spec with instructions and acceptance criteria |
-| Review (Research/Task/Execution review) | `inc-reviewer` | check research/tasks/work |
+Applies to every sub-agent launch for any role (`A2-researcher`, `A3-explorer`, `A4-reviewer`, `A5-executor`, `A6-coordinator`, and any further nesting).
 
-- `inc-executor` — only at Stages 3–4 (task creation/execution), NOT for research; chosen when the task is a spec with clear instructions and acceptance criteria. `inc-reviewer` — at review stages (Research review, Task review, Execution review).
+1. Resolve Ambient context per `R15-ambient` (clarify if missing; do not ask when `Ambient context: none`).
+2. Put the resolved Ambient block at the very start of the sub-agent prompt (verbatim `Ambient rules: …` or `Ambient context: none`).
+3. Then add role-specific instructions (`R12-model-line`, `R13-changed-files`, Executor protocol, etc.).
+4. Every agent that received Ambient context passes it to each child sub-agent unchanged — same wording, same order; do not drop, summarize, or rewrite.
 
-### inc-rule-ambient
-- Ambient context — session/environment facts for subagents (repository name, session_id, etc.), not coding conventions or task design rules.
-- Format when present: header `Ambient rules:` then one item per line (`1) …`, `2) …`).
-- Explicitly empty: `Ambient context: none` — ambient is set, no need to ask.
-- If Ambient context is absent (no `Ambient rules:` block and no `Ambient context: none`) — the agent must clarify via `inc-rule-ask` before launching any subagent.
-- Each subagent launch must put the resolved Ambient block at the start of the prompt; each agent passes the block to child subagents unchanged.
+---
 
-### inc-rule-no-ask-tool
-- Subagents (`inc-explorer`, `inc-researcher`, `inc-executor`, `inc-reviewer`) are forbidden to ask questions via the ASK tool or any platform tool for questions (AskQuestion, ask_question, AskUserQuestion, request_user_input, etc.).
-- A subagent asks questions only in text in its response to the parent.
-- Only `inc-engineer` (main chat) can use the ask tool for questions to the user.
-
-### inc-rule-model-line
-- Every subagent prompt must include this line verbatim:
-  > End your final response with the line `My model: X` where X is your actual model identifier — write your actual model identifier in place of X.
-- Recording the subagent's model: if the platform tool allows an explicit subagent `model` — record that call parameter; otherwise — read `My model:` from the subagent's response and record it.
-- `inc-engineer` records `Used model` and `[model-name]` in statuses — subagents must not edit these fields.
-
-### inc-rule-changed-files
-- After a creation/edit batch — list every created or changed path (relative to root, fully). Renames and deletions count too.
-- Propagation: the executor subagent includes the full list in its final response; `inc-engineer` aggregates lists from child subagents and passes the full set to the user.
-- Do not drop or shorten paths.
-
-### inc-rule-navigate
-- After a task/subtask — navigate the user to created/changed files via the platform navigate tool.
-- Navigate to each such file, with a short description (chip label).
-- Use line ranges (`from_line`/`to_line`) to point to the exact changed region when relevant.
-- For git files pass the git session id; for ws docs omit it.
-- Never use navigate to read contents — only to show files in the UI.
-
-### inc-rule-paths
-- Under `inceptions/` only paths defined by the storage structure are allowed.
-- Allowed: inception folders `{N}-{inception-slug}/`, attempt folders `try-{N}-{Level}-{description}/`, the attempt's `res/` with role subagents' research files.
-- Extracted rules go to `spawn/rules/` (not under `inceptions/`) — see `inc-rule-extract`.
-- No extra files; no README or other extraneous documents under `inceptions/`.
-
-### inc-rule-res-file
-- A role subagent's research (explorer/researcher) is passed to the parent via a file in the attempt's `res/`: `try-{N}-{Level}-{description}/res/`.
-- Research file name: `{task-descr-slug}.{agent-slug}.md`.
-- `{task-descr-slug}` — slug of the direction/task (research topic); `{agent-slug}` — one-word slug of the agent's goal.
-- The subagent creates the research file and links it in its report (the inline report is not duplicated in the response).
-- The subagent itself creates it (the read-only restriction of research roles does not cover creating the research file in the attempt's `res/`).
-
-### inc-rule-agent-slug
-- Each role subagent is assigned a role (`inc-explorer`, `inc-researcher`, `inc-executor`, `inc-reviewer`) and an agent slug (`agent-slug`) at launch.
-- `agent-slug` — one-word slug of the agent's goal (e.g., `structure`, `sources`, `verify`).
-- Used in the research file name (`inc-rule-res-file`) and to identify an agent within an attempt.
-
-### inc-rule-extract
-- Extracted rules are stored in `spawn/rules/{SLUG}-{N}-{description}.md` — one per file.
-- They are NOT `inc-rule-{slug}` (internal methodology rules), but rules extracted from a specific inception while working with the user.
-- File name: `{SLUG}-{N}-{description}.md`, where `{SLUG}` — short slug of the rule topic, `{N}` — inception number, `{description}` — short description. Refined while working with the user.
-- A rule is extracted at the closing stage (Stage 5) and when updating documentation.
-- Rule file format: short description + executable items (what to do/not do), following the pattern of rules in this document.
-- After writing rules to `spawn/rules/` — call `spawn refresh` to re-render skills and update `spawn/navigation.yaml`.
-
-### inc-rule-synthesis
-- When the user's request involves another methodology/skill/instruction runnable in synthesis with inceptions (e.g., `spec/main.md`, another Spawn extension, a team skill) — detect it at Stage 0 (Entry) when classifying the request.
-- If none is detected — skip synthesis entirely (no-op); continue the normal stage flow.
-- If one is detected — offer the user (via `inc-rule-ask`) synchronous work with it. Do not impose; the user decides.
-- If several are detected — ask which single methodology to synthesize with (not all at once).
-- Exception: if the detected methodology is inceptions itself (self-synthesis), skip the step.
-- Upon agreement — launch an `inc-executor` subagent that writes the joint-work instruction file (see the "Synchronous work with another methodology" algorithm below).
-- The instruction maps inceptions stages/steps to the other methodology's steps, so both run together consistently.
-- Store the instruction in `spawn/rules/` (see naming below), then call `spawn refresh` (as in `inc-rule-extract`).
-- The file is registered in `spawn/navigation.yaml` under `read-contextual`, read when the two methodologies are used simultaneously.
-- Do not create an instruction for a methodology already covered by an existing `spawn/rules/` file — reuse it (reuse-check).
-
-### inc-rule-synthesis-check
-- The canonical "Synthesis check" step, run at the start of every stage (Stage 0 through Stage 5, each as step `X.0`).
-- If the request/stage involves another methodology/skill/instruction runnable in synthesis with inceptions — offer synchronous work (see "Synchronous work with another methodology").
-- If none is detected — skip entirely (no-op); continue the normal stage flow.
-- In stages where a joint-work instruction was already created (Stage 3–5), instead of offering, ensure the instruction is available and applied (follow its step mapping).
-- In Stage 4a, if a joint-work instruction was created, keep it in sync with any methodology changes.
-- In Stage 5, if synchronous work was used, note in the final report how the two methodologies interleaved.
-- Each stage references this rule instead of repeating the block: `X.0 Synthesis check — see inc-rule-synthesis-check`.
-
-### inc-rule-attempt-naming
-- Attempt name: `try-{N}-{Level}-{description}`, where `{Level}` ∈ {Low, Medium, High, New}.
-- `Low` — completed with almost no benefit.
-- `Medium` — benefit assessed as average.
-- `High` — successful solution of the task.
-- `New` — new task (slug — new task).
-- After the attempt completes, the folder is renamed from `New` to the corresponding status (Low/Medium/High).
-
-### inc-rule-naming
-- **Attempts:** `try-{N}-Low-{description}`, `try-{N}-Medium-{description}`, `try-{N}-High-{description}`, `try-{N}-New-{description}` (`inc-rule-attempt-naming`).
-- **Roles:** `inc-{role_name}` (inc-engineer, inc-explorer, inc-researcher, inc-executor, inc-reviewer).
-- **Agent slug:** `{agent-slug}` — one-word slug of the agent's goal, assigned to each role subagent at launch (`inc-rule-agent-slug`).
-- **Research files:** `{task-descr-slug}.{agent-slug}.md` in the attempt's `res/` folder (`inc-rule-res-file`), where `{task-descr-slug}` — slug of the direction/task, `{agent-slug}` — one-word slug of the agent's goal.
-- **Internal methodology rules:** `inc-rule-{slug}` (inc-rule-ask, inc-rule-ambient, etc.), described in this document.
-- **Extracted inception rules:** `{SLUG}-{N}-{description}`, stored in `spawn/rules/{SLUG}-{N}-{description}.md`.
-- **Stage statuses:** Research → Research review → User research review → Task creation → Task review → User task review → Execution → Execution review → User result review → Final report → Documentation update & rules extract.
-
-### inc-rule-status
-- Statuses are marked `[V]` upon stage completion, with the model in parentheses (`[model-name]`).
-- Prompt wording to the user is reproduced exactly.
-- Stages go in order, unless the process explicitly allows otherwise.
-
-### inc-rule-ask-if-unclear
-- A subagent can ask the parent a question if something is unclear in the task/direction.
-- The question is asked only in text in the subagent's response (`inc-rule-no-ask-tool`).
-- The subagent does not block work indefinitely: if the answer is critical — it stops and returns the question to the parent.
-
-### inc-rule-subagent-run
-- Applies to every subagent launch of any role (`inc-explorer`, `inc-researcher`, `inc-executor`, `inc-reviewer` and further nesting). Consolidates launch order (`inc-rule-subagent-launch`, `inc-rule-ambient`).
-1. **Resolve Ambient context** — determine it by `inc-rule-ambient` (clarify via `inc-rule-ask` if absent; skip when `Ambient context: none`).
-2. **Ambient at the start of the prompt** — put the resolved Ambient block at the start of the subagent prompt (verbatim `Ambient rules: …` or `Ambient context: none`).
-3. **Role instructions** — then add role-specific instructions (`inc-rule-model-line`, `inc-rule-changed-files`, task/direction/review template, etc.).
-4. **Pass to children unchanged** — each agent passes received Ambient context to every child subagent unchanged — same wording, same order; do not drop, shorten, or rewrite.
-
-### inc-rule-done-marking
-- Adaptation of R15-done-marking from `spec/main.md` to the inception structure, where tasks are bullet lines in `technical-task.md` (not separate files).
-- After an executor completes a subtask, the engineer (`inc-engineer`) marks `[V]` at the start of the task line in `technical-task.md` and records `Used model: {model}` next to it (from `inc-rule-model-line`).
-- Only `inc-engineer` marks `[V]` and writes `Used model` in `technical-task.md` — the executor (`inc-executor`) does not edit these fields.
-- The executor reports completion status (`Done | Partial | Failed`) and `My model:` in its report.
-- Mark immediately after the executor's response.
-- The `[V]` marking convention is `inc-rule-status`.
-
-## Storage structure (artifacts)
-
-Root: `inceptions/`
+## Process Overview
 
 ```
-inceptions/
-  {N}-{inception-slug}/          — inception
-    motivation.md                — main motivation, start date, etc. (strict template)
-    try-{N}-Low-{description}/   — attempt: completed with almost no benefit
-    try-{N}-Medium-{description}/ — attempt: benefit assessed as average
-    try-{N}-High-{description}/  — attempt: successful solution of the task
-    try-{N}-New-{description}/   — attempt: new task (slug — new task)
-
-spawn/rules/                     — extracted inception rules ({SLUG}-{N}-{description})
-  {SLUG}-{N}-{description}.md    — one rule per file
+[0] Request classification (Question -> answer | Initiative -> Step 1)
+→ [1] Spec drafting
+→ [2] Spec self-review
+→ [3] Spec review (user)
+→ [4] Execution
+→ [5] Execution self-review
+→ [6] Result review (user)
+→ [7] Documentation update
+→ (optional) pattern extract to spawn/rules/
 ```
 
-Each attempt is a separate folder with separate steps and files:
-
-```
-try-{N}-{Level}-{description}/
-  overview.md        — statuses, goal, motivation, research summary, links to spec and result
-  technical-task.md  — high-level spec, tasks, execution mode
-  result.md          — attempt outcome and notes
-  res/               — research files of role subagents (see inc-rule-res-file)
-    {direction}.{goal}.md  — research: {task-descr-slug}.{agent-slug}.md
-```
-
-Role-subagent research files (explorer/researcher) live in the attempt's `res/` folder, named per `inc-rule-res-file`. Each attempt sits in one folder of one task. After completion, the task folder is renamed to its status (Low/Medium/High/New).
-
-Internal methodology rules (`inc-rule-{slug}`, e.g. `inc-rule-ask`) are described here and not extracted into files. Rules extracted from inceptions are stored in `spawn/rules/{SLUG}-{N}-{description}.md` — one per file (`inc-rule-extract`).
-
-## Process (structural)
-
-```
-User -> User request -> Engineer (inc-engineer)
-  [A] Question: ask basic clarification if unclear -> split into sub-questions
-      -> organize researcher subagent(s) -> distribute tasks (set direction)
-      -> synthesize the answer -> if an inception is clear, propose the Research stage
-  [B] Initiative / explicit "do": start the Research stage directly
-  RESEARCH STAGE (Stage 2): clarify initiative, ask motivation/questions
-      -> create base docs by templates -> launch researchers (up to 3 waves;
-      reviewer reviews each wave, engineer analyzes artifacts)
-      -> user research review: [Proceed] / [Refine] / [Stop]
-  TASK CREATION STAGE (Stage 3): form high-level task in overview
-      -> form subtasks -> engineering research -> reviewer reviews tasks
-      -> user task review: [OK] / [Fixes]
-  EXECUTION STAGE (Stage 4): choose mode [A]auto / [B]step / [C]inline / [D]details
-      -> execute -> reviewer reviews -> fix problems -> final brief report
-      -> user result review: [Done] / [Rework] / [Fail]
-  STAGE 4a: DOCUMENTATION UPDATE AND RULES EXTRACT
-      -> extract rules to spawn/rules/{SLUG}-{N}-{description}.md -> update docs
-  CLOSING STAGE (Stage 5, Final report): analyze artifact, show user,
-      rename attempt, fill motivation.md
-```
-
-The detailed step-by-step flow, decision points, and user-review options are described in "Detailed stage description" below.
-
-## Synchronous work with another methodology (optional step, inc-rule-synthesis)
-
-Launched from Stage 0 (Entry), when the request involves another methodology/skill/instruction compatible with inceptions. Skipped entirely when none is detected.
-
-S0. **Detection (Stage 0)** — when classifying the request, check whether it refers to another methodology/skill/instruction (`spec/main.md`, another Spawn extension, a team skill, an instruction file) runnable with inceptions. Nothing detected or inceptions itself (self-synthesis) → skip (no-op). Several detected → ask which single one.
-S1. **Offer (inc-rule-ask)** — if one methodology is detected, ask the user whether to form synchronous work with it. Declined → skip; several detected → ask which single one.
-S2. **Preparation** — determine the target methodology's source (path to its main.md / skill / instruction) and its step list. Agree on the joint-work file name (see naming below) with the user.
-S3. **Launch the executor** — launch an `inc-executor` subagent (`inc-rule-subagent-launch`, `inc-rule-ambient`, `inc-rule-model-line`) to read inceptions/main.md and the target methodology, then write a joint-work instruction file mapping inceptions stages/steps → steps of the target methodology.
-S4. **Writing** — the executor writes the file to `spawn/rules/` (see naming below) and reports the path (`inc-rule-changed-files`).
-S5. **Update** — call `spawn refresh` (as in `inc-rule-extract`) so the file registers in `spawn/navigation.yaml` under `read-contextual` → rules.
-S6. **Usage** — when both methodologies run simultaneously, read the joint-work instruction (now in `read-contextual`) and follow the step mapping; the engineer coordinates both flows.
-
-**Joint-work instruction file naming:** `spawn/rules/synthesis-{methodology-slug}.md`, where `{methodology-slug}` — short slug of the other methodology/skill (e.g., `spectask`, `mempalace`, `team-code-review`). Example: `spawn/rules/synthesis-spectask.md`. The scheme does not overlap with the extracted-rule naming `{SLUG}-{N}-{description}`.
-
-**File content (template):** header `# Synthesis: inceptions <-> {methodology}`; short description (read when both methodologies are used simultaneously); step mapping table `| inceptions stage/step | {methodology} step | who leads | notes |`; coordination rules (how the engineer alternates the two flows, which artifacts are shared and where they live, conflict resolution, when both methodologies define a step); source (Inception 3, attempt try-1-High-synthesis-step).
-
-## Detailed stage description
-
-### Stage 0: Entry (user request)
-
-**Executor:** `inc-engineer` (main chat)
-
-The engineer accepts and classifies the user request:
-- **[A] Question** — the request is an already-formed question (the user asks, not requests to "do").
-- **[B] Initiative / task** — the user sets an initiative in solving a problem, forms an explicit "do" request, or asks to conduct research.
-
-**What the engineer does:**
-0.0 **Synthesis check** — see `inc-rule-synthesis-check`.
-1. Determines the user's language (`inc-rule-language`): if unambiguous — work in it; if ambiguous — offer a set via `inc-rule-ask`.
-2. Determines the request type (A or B).
-3. If unclear — asks basic clarification and waits.
-4. If attributable to an existing inception in `inceptions/` — proposes to continue with it (pass the inception, problem, etc. in text).
-
-**Options:**
-- Type A request → move to Stage 1 (Question).
-- Type B request → move to Stage 2 (Research).
-- Request relates to an existing inception → propose to continue; upon agreement — open the folder and continue from the needed stage.
+Mark each status [V] on completion. Prompt the user after steps 2, 5, and 6. Step 0 is a gate, not a status step — it has no status checkbox. After Step 7, offer optional Pattern extract (not a Status checkbox).
 
 ---
 
-### Stage 1: Question (only for type A requests)
+## Step 0: Request classification
 
-**Executor:** `inc-engineer`
+**Executor:** `A1-drafter` (current context)
 
-**What the engineer does:**
-1.0 **Synthesis check** — see `inc-rule-synthesis-check`.
-1.1 **Clarification** — if unclear, ask basic clarification and wait.
-1.2 **Question decomposition** — split the question into sub-questions.
-1.3 **Organizing researchers** — organize a researcher subagent (`inc-explorer`) or a team (launch by `inc-rule-subagent-launch`, `inc-rule-ambient`, `inc-rule-model-line`).
-1.4 **Task distribution** — distribute sub-questions among researchers; set each line a direction (see the direction line template) or leave it free.
-1.5 **Answer synthesis** — synthesize the answer: one or several variants of truth.
-1.6 **Inception proposal** — if the information reveals the inception the user wants, propose Stage 2 (Research).
-
-**Output options:**
-- Answer given, no inception needed → finish.
-- Inception is clear → propose Stage 2, wait for agreement.
-
-**Status:** the stage creates no inception folder ("light" mode). If it transitions to an inception — the folder is created at Stage 2.
+0.1 Classify the request per `R16-classify`:
+  - [A] Question -> answer directly (light mode); no `inceptions/` folder, no status checkboxes; optionally launch `A2-researcher`/`A3-explorer` (Subagent run protocol, `R12-model-line`) for accurate facts; if the answer reveals a real task, propose Step 1.
+  - [B] Initiative / task -> proceed to Step 1 (Spec drafting).
+0.2 If the type is unclear, ask via `R9-ask` and wait.
 
 ---
 
-### Stage 2: Research
+## Step 1: Spec drafting
 
-**Executor:** `inc-engineer` (coordination), `inc-explorer` (research), `inc-reviewer` (review)
+**Executor:** `A1-drafter`
 
-**What the engineer does:**
-2.0 **Synthesis check** — see `inc-rule-synthesis-check`.
-2.1 **Initiative clarification** — clarify the initiative, ask for motivation and necessary questions (`inc-rule-ask`: ask the user, not subagents).
-2.2 **Base documentation creation (mandatory, before any research)** — create the attempt's base documentation by templates (`inc-rule-paths`). MUST precede any researcher launch:
-   - if first attempt of first inception — create `inceptions/{N}-{inception-slug}/` and `motivation.md`;
-   - create the attempt folder `try-{N}-New-{description}/` (`inc-rule-attempt-naming`);
-   - create `overview.md` (statuses, goal, motivation — strict template);
-   - create the research folder `res/` (`inc-rule-res-file`).
-   - **Checklist (all must exist before research starts):** `motivation.md` (first attempt), `try-{N}-New-{description}/`, `overview.md`, `res/`. If any is missing — stop and create it; do not launch researchers without the base documentation.
-2.3 **Research depth selection** — ask the user the depth (`inc-rule-ask`). Three modes:
-   - **[inline]** — the engineer researches in the chat without subagents (trivial, one-off questions);
-   - **[medium]** — launch a single `inc-explorer` (or `inc-researcher` for a narrow single-line question);
-   - **[high]** — launch several directed `inc-explorer` subagents, each with its own direction line (decomposition into independent lines).
-   - If unspecified — default to **[medium]** (single explorer).
-2.4 **Research loop (explorer-driven)** — the engineer runs research in a loop. Each iteration:
-   2.4.1 **Decompose** — split research into independent direction lines (`high` — several; `medium` — one). Assign each line an agent slug (`inc-rule-agent-slug`).
-   2.4.2 **Launch** — launch `inc-explorer` (or `inc-researcher`) subagents, one per line, by the "Direction line template" (`inc-rule-subagent-launch`, `inc-rule-subagent-depth`, `inc-rule-ambient`, `inc-rule-model-line`). Each researcher writes the full research to `res/{task-descr-slug}.{agent-slug}.md` and links it in the report (`inc-rule-res-file`).
-   2.4.3 **Collect** — collect the research files from `res/`, synthesize results into the Research summary in `overview.md` (with links).
-   2.4.4 **Review** — launch an `inc-reviewer` subagent to review the results (`inc-rule-subagent-launch`). The engineer analyzes the artifacts.
-   2.4.5 **Decide** — based on the review:
-   - gaps remain → run another wave (up to 3 total): refine by specific clarifications/errors, return to 2.4.1;
-   - research complete → proceed to 2.5.
-2.5 **Continuation proposal** — at the end propose:
-   - move to Stage 3 (Task creation);
-   - OR move to a separate chat with the prompt `{prompt}` (the engineer forms a ready prompt for a new chat);
-   - OR create a subagent to continue Stage 3 — launch one with role `inc-engineer` (`inc-rule-subagent-launch`); it receives the research context and continues forming tasks.
-2.6 **User research review** — show the research summary and ask the user to confirm continuation (`inc-rule-ask`). The user chooses one of:
-   - **[Proceed]** — research sufficient, move to Stage 3 (Task creation);
-   - **[Refine]** — needs refinement: the user points out what to clarify, return to 2.4 (another wave, up to 3 total);
-   - **[Stop]** — stop here (e.g., move to a separate chat with a prompt, or finish).
+1.0 **Research** — run a research loop before drafting the spec when the subject is not yet clear. Skip for trivial tasks.
 
-**Status:** in the attempt's `overview.md` mark `[V] Research [model]`, `[V] Research review [model]` and `[V] User research review`.
+1.0.1 **Research depth selection** — ask the user (`R9-ask`) whether research is needed and at what depth:
+  - [inline] — no subagents; the drafter researches in-chat (trivial, one-off questions)
+  - [medium] — launch a single `A3-explorer` (or `A2-researcher` for a narrow single-line question) subagent (default)
+  - [high] — launch several directed `A3-explorer` subagents, one per direction line
+  - [skip] — no research needed; proceed directly to spec drafting
+  Default to [medium] if the user does not specify. If the task is trivial and the path is obvious, offer [skip] first.
 
----
+1.0.2 **Research loop** — run research in a loop, up to 3 waves:
+  1.0.2.1 Decompose — split research into independent direction lines (high = several, medium = one)
+  1.0.2.2 Launch — launch `A3-explorer`/`A2-researcher` subagents, one per line (Subagent run protocol `R15-ambient`, `R12-model-line`)
+  1.0.2.3 Collect — record findings into the `## Research summary` section of `overview.md`; research files go to `res/{research}.md`
+  1.0.2.4 Review — launch `A4-reviewer` to review the research (Subagent run protocol)
+  1.0.2.5 Decide — gaps remain -> another wave (up to 3 total), return to 1.0.2.1; complete -> proceed to 1.0.3
 
-### Stage 3: Task creation
+1.0.3 **User research review** — show the research summary, ask the user (`R9-ask`):
+  - [Proceed] — research sufficient, move to spec drafting
+  - [Refine] — needs refinement, user points out what to clarify, return to 1.0.2 (another wave, up to 3)
+  - [Stop] — stop here (finish or move to a separate chat with a prompt)
 
-**Executor:** `inc-engineer` (coordination), `inc-explorer` (engineering research), `inc-reviewer` (task review)
+1.1 **Project rules (navigation)** — **MANDATORY!** Follow `R10-navigation` before writing any spec content.
 
-**What the engineer does:**
-3.0 **Synthesis check** — see `inc-rule-synthesis-check`.
-3.1 **Spec formation** — form the high-level technical task in the attempt's `technical-task.md` from the research.
-3.2 **Subtask formation** — form subtasks for executor subagents (`inc-executor`).
-3.3 **Agent specification** — in the task template specify: suggested agent, used agent, etc.
-3.4 **Execution scheme formation** — form `## Execution scheme` in `technical-task.md`: split tasks into sequential (→) and parallel (||) phases, as in `spec/main.md`. Each task is performed by a separate `inc-executor` subagent.
-3.5 **Engineering research** — refine task wording with researchers (`inc-explorer` or `inc-researcher`) (`inc-rule-subagent-launch`, `inc-rule-subagent-depth`).
-3.6 **Task review** — launch a subagent with role `inc-reviewer` to review the formed tasks (`inc-rule-subagent-launch`).
-3.7 **User task review** — show the formed tasks to the user and ask for their OK to execute (`inc-rule-ask`). The user chooses one of:
-   - **[OK]** — the tasks are correct, proceed to execution;
-   - **[Fixes]** — the tasks need changes: the user points out what to fix, return to 3.1–3.6 and reform.
-3.8 **Execution proposal** — after OK, propose moving to Stage 4 (Execution).
+1.2 **Implementation clarifications** — **MANDATORY!**:
+- Before writing any spec content, identify ambiguous, optional, or convention-dependent aspects.
+- Ask the user explicit questions (`R9-ask`) and wait for answers.
+- Record answers (or agreed defaults) in **Details**.
+- Skip only when there is a single obvious path.
+- If **Ambient context** is not already set in this chat, ask via `R9-ask` (repository, session, and similar); accept a list or explicit `Ambient context: none` (`R15-ambient`).
+- If **motivation** is unclear, ask via `R9-ask` (multiple choice; adapt to context):
+  - research — gather information, answer a question, explore a topic
+  - documentation — produce or update documents, guides, specs
+  - planning — produce a plan, roadmap, or breakdown
+  - analysis — analyze data, compare options, evaluate
+  - writing — produce prose, reports, summaries
+  - decision support — evaluate options and recommend
+  - other — name the driver in one sentence
+- Put the chosen motivation in **`## Motivation`** (after **Goal**).
 
-**Status:** mark `[V] Task creation [model]`, `[V] Task review [model]` and `[V] User task review`.
+1.3 **Overview**
+- `inceptions/{N}-{inception-slug}/{N}-{description}/overview.md` follows the overview.md template
+- sections through `## Details` (before/after and examples go there)
+- **Goal** = one sentence
+- **Motivation** immediately after **Goal**
+- add `## Subtasks` only when work splits into 2+ subtasks
 
----
+1.4 **Decomposition**
+- when work has 2+ subtasks:
+  - subtask ids in `## Subtasks` must match `{N}-{description}.md` filenames from 1.5
+- create `{N}-{description}.md` per subtask with:
+  - goal
+  - approach
+  - affected artifacts (named files/documents/deliverables per path)
+  - changes (before/after)
+- set `Suggested model` for the subtask; leave `Used model` empty
+- optional: launch `A3-explorer` (or `A2-researcher`) as a new sub-agent for read-only research to determine accurate **Before** / **After** text, then merge findings into the subtask files (research only; `A1-drafter` owns decomposition and the spec); follow **Subagent run protocol** (`R15-ambient`)
 
-### Stage 4: Execution
-
-**Executor:** `inc-engineer` (coordination), `inc-executor` (execution), `inc-reviewer` (review)
-
-**What the engineer does:**
-4.0 **Synthesis check** — see `inc-rule-synthesis-check`.
-4.1 **Execution mode selection** — ask the user how to execute the task (`inc-rule-ask`). Offer 4 options with codes:
-   - **[A] automatic** — execute automatically by the scheme with subagents (`inc-executor` by `## Execution scheme`). **Default mode** — preferred for this methodology;
-   - **[B] step by step** — sequentially, asking the user for permission to move to the next step;
-   - **[C] inline** — execute without subagents (the engineer does it in the chat; higher risk of hallucinations since there is no independent check). **Anti-pattern for this methodology** — use only when the user explicitly insists or the task is trivial;
-   - **[D] show task details** — first show task details in the chat, then choose the mode.
-   If the user does not specify a mode — default to **[A] automatic** (do not silently fall back to inline).
-4.2 **Execution** — execute the task in the chosen mode. In automatic mode — follow `## Execution scheme` from `technical-task.md`: launch subagents with role `inc-executor` by `inc-rule-subagent-launch`, observing sequential (→) and parallel (||) phases.
-4.3 **Review** — launch a subagent with role `inc-reviewer` to review the completed work (`inc-rule-subagent-launch`).
-4.4 **Fixing problems** — fix the found problems.
-4.5 **Final report** — form the final brief report (final report template).
-4.6 **User result review** — after the self-review and fixing problems, show the result to the user and ask them to confirm the outcome (`inc-rule-ask`). The user chooses one of:
-   - **[Done]** — everything is done, the task can be closed. The user assesses the attempt level (High / Medium / Low) and confirms closing; rename the attempt to `try-{N}-High-{description}` / `try-{N}-Medium-{description}` / `try-{N}-Low-{description}` (`inc-rule-attempt-naming`);
-   - **[Rework]** — rework is needed: the user points out what to fix, return to 4.2 (or 4.4) and continue;
-   - **[Fail]** — close the task as failed (Low), rename to `try-{N}-Low-{description}` (`inc-rule-attempt-naming`), move to Stage 5 (Closing).
-
-**Status:** mark `[V] Execution [model]`, `[V] Execution review [model]` and `[V] User result review`.
+- set [V] "Spec drafting" `[model-name]` (record the model per `R12-model-line`): `- [V] Spec drafting [model-name]`
+- list changed files per `R13-changed-files`
 
 ---
 
-### Stage 4a: Documentation update & rules extract
+## Step 2: Spec self-review
 
-**Executor:** `inc-engineer`
+**Executor:** `A4-reviewer`
 
-**What the engineer does:**
-4a.0 **Synthesis check** — see `inc-rule-synthesis-check`.
-4a.1 **Rules extract** — extract rules from the completed work (`inc-rule-extract`). Extracted rules are NOT `inc-rule-{slug}` (internal methodology rules), but rules extracted from a specific inception while working with the user.
-4a.2 **Saving rules** — save each rule to a file `spawn/rules/{SLUG}-{N}-{description}.md` — one rule per file (`inc-rule-extract`). The file name and rule composition are refined while working with the user. After writing — call `spawn refresh` to re-render skills.
-4a.3 **Documentation update** — update necessary documentation (overview, technical-task, result, motivation at closing).
-
-**Status:** mark `[V] Documentation update & rules extract [model]`.
-
----
-
-### Stage 5: Closing (Final report)
-
-**Executor:** `inc-engineer`
-
-**What the engineer does:**
-5.0 **Synthesis check** — see `inc-rule-synthesis-check`.
-5.1 **Artifact analysis** — analyze the obtained work artifact.
-5.2 **Showing the user** — show the user:
-   - success in solving the problem / not success;
-   - reasons why success was not achieved;
-   - highlighted problems;
-   - a proposal to continue the solution cycle in the next task, but taking into account the previous work and context of all steps and problems from the previous task.
-5.3 **Folder rename** — rename the attempt folder to the corresponding status (Low/Medium/High) (`inc-rule-attempt-naming`).
-5.4 **Filling motivation.md** — when closing the inception, fill `## Result` in `motivation.md` (VERY briefly: how it was implemented, what was done, pointing to the successful attempt) and mark `[V] Closed`.
-
-**Output options:**
-- Inception closed → finish.
-- Continue the cycle → create a new attempt `try-{N}-New-{description}` (`inc-rule-attempt-naming`) and start from Stage 2.
-
-**Status:** mark `[V] Final report [model]` in the attempt's `overview.md`; in `motivation.md` — `[V] Closed`.
+- sub-agent prompt: **Subagent run protocol** first (`R15-ambient`), then the line from `R12-model-line`
+- review the spec for:
+  - scope impact, errors, sequencing issues
+  - concrete artifacts, paths, and deliverables per `R7-concrete` in every subtask and overview
+  - compliance with `R10-navigation`
+- fix if needed
+- set [V] "Spec self-review" `[model-name]` (record the model per `R12-model-line`): `- [V] Spec self-review [model-name]`
+- list changed files per `R13-changed-files` if any files were edited
+- prompt: "Spec self-review complete — spec is ready for your review (Step 3). Reply 'spec review passed', 'lgtm', or 'ok' when satisfied."
 
 ---
 
-## Stage statuses
+## Step 3: Spec review
 
-All stages are marked with the `[V]` status (`inc-rule-status`). Rules are formed by the `inc-rule-{slug}` principle, roles — by the `inc-{role_name}` principle. The attempt status sequence is listed in `inc-rule-naming`.
+**Executor:** User
+
+- on confirmation ("spec review passed", "lgtm", "ok"):
+  - set [V] "Spec review"
+  - prompt: "Reply 'implement' to start."
 
 ---
 
-## Templates
+## Step 4: Execution
 
-Templates live in `inceptions/templates/`:
+**Executor (coordination):** `A6-coordinator`
+- **Same chat as Steps 1–2:**
+  - `A1-drafter` must not act as `A6-coordinator` for Steps 4–5
+  - on the implementation command, launch **one new sub-agent** as `A6-coordinator` for Steps 4–5 end-to-end
+  - parent waits for the coordinator, then waits for the user for Step 6
+- **Fresh execute chat** (Steps 1–2 not in context): the current agent is `A6-coordinator`
 
-- `inceptions/templates/motivation.md` — inception motivation template (strict).
-- `inceptions/templates/overview.md` — attempt overview template (strict).
-- `inceptions/templates/technical-task.md` — attempt technical-task template (strict).
-- `inceptions/templates/result.md` — attempt result template (strict).
-- `inceptions/templates/rule.md` — extracted rule file `spawn/rules/{SLUG}-{N}-{description}.md` template.
-- `inceptions/templates/executor-report.md` — inc-executor response (Output format).
-- `inceptions/templates/researcher-report.md` — inc-explorer / inc-researcher response (Output format).
-- `inceptions/templates/reviewer-report.md` — inc-reviewer response (Output format).
-- `inceptions/templates/final-report.md` — final report to the user (Output format).
+**`A6-coordinator`** — follows the subtask list, launches one `A5-executor` per subtask, then Step 5 (`A4-reviewer`).
+**Each subtask:** `A5-executor` (new sub-agent) — child of the coordinator.
 
-Input prompts (task/direction/review) are described below; response templates (Output format) are the files listed above.
+- on "run it" / "implement" / "execute" / any direct instruction to start execution:
+  - if "Spec review" is not yet marked, set [V] "Spec review" automatically (implementation command implies approval)
+  - if this chat already completed Steps 1–2 for the task:
+    - launch the Steps 4–5 `A6-coordinator` sub-agent (see Executor above) and stop coordinating inline
+    - include in prompt: **Subagent run protocol** (`R15-ambient`); follow Steps 4–5 for `inceptions/{N}-{inception-slug}/{N}-{description}/` as `A6-coordinator`; the line from `R12-model-line`
+  - **MANDATORY!** launch an `A5-executor` sub-agent for each subtask — do NOT execute inline; no exceptions, even if a subtask seems trivial
+    - prefer subtask `Suggested model`: pass as Task/sub-agent `model` when supported; else name in prompt and use nearest slug
+    - Executor prompt must include: **Subagent run protocol** (`R15-ambient`), line from `R12-model-line`, changed-files list per `R13-changed-files`, **Executor protocol** below
+  - execute subtasks sequentially (one after another); there is no parallel execution scheme in this methodology
 
-### Common subagent prompt blocks
+- per subtask: after the Executor replies, mark done per `R14-done-marking` (rename + `Used model`)
+- when all subtasks done and Step 5 complete: set [V] "Execution" `[model-name]` (coordinator model, per `R12-model-line`): `- [V] Execution [model-name]`
+- forward the aggregated changed-files list to the user per `R13-changed-files`
 
-The four input templates below (executor, explorer, researcher, reviewer) share common blocks. These blocks are defined once here and referenced by each template as `{common-rules}`, `{common-ask}`, `{common-forbidden}`.
+**Executor protocol** (`A5-executor`, each subtask):
+- Implement the subtask; list changed files per `R13-changed-files`.
+- At the end, set `Status: Done` in the subtask file.
+- End the reply with the `My model:` line from `R12-model-line`.
 
-**`{common-rules}`** — "Rules to follow" block, role-specific (each template lists its own items):
-- Cannot create subagents / can create only `inc-researcher` / can call researcher subagents — per `inc-rule-subagent-depth` (see each template's "Subagents you may call").
-- Read-only (research roles), except creating a research file in the attempt's `res/` (`inc-rule-res-file`).
-- Cannot use the ASK tool or a platform tool for questions (`inc-rule-no-ask-tool`).
-- Ask questions only in text in the response to the parent (`inc-rule-ask-if-unclear`).
-- At the end of the response add the line `My model: X` with the real model identifier (`inc-rule-model-line`).
-- (executor only) List all created/changed files in the report (`inc-rule-changed-files`).
+---
 
-**`{common-ask}`** — "Ask if unclear" block:
-- Allowed to ask the parent a question if something is unclear.
+## Step 5: Execution self-review
 
-**`{common-forbidden}`** — "Forbidden" block:
-- Forbidden to ask a question via the ASK tool or any platform tool for questions (AskQuestion, ask_question, AskUserQuestion, request_user_input, etc.). Questions are asked only in text in the subagent's response to the parent.
+**Executor:** `A4-reviewer` (new sub-agent; launched by `A6-coordinator`)
 
-### Task template for the executor (inc-executor) — input
+- sub-agent prompt: **Subagent run protocol** first (`R15-ambient`), then the line from `R12-model-line`
+- review all changes: inconsistencies, naming, missing artifacts, broken references; respect Ambient context when present
+- fix if needed
+- set [V] "Execution self-review" `[model-name]` (record the model per `R12-model-line`): `- [V] Execution self-review [model-name]`
+- list changed files per `R13-changed-files` if any files were edited
+- prompt: "Self review done. Reply 'result review passed' to proceed."
+
+---
+
+## Step 6: Result review
+
+**Executor:** User
+
+- on confirmation ("result review passed", "lgtm", "ok"):
+  - set [V] "Result review"
+  - fill `## Outcome` in `overview.md` (Success / Partial / Failed) per the user's assessment
+  - prompt: "Will now update documentation (Step 7)."
+
+---
+
+## Follow-up changes after execution
+
+If the user requests rework or fixes after Step 4:
+
+- carry out the changes (as `A5-executor` or current context); list changed files per `R13-changed-files`
+- ask via `R9-ask`: "Do you want to update the specifications of the current attempt?"
+  - Yes: `A1-drafter` (or current context) edits the affected subtask files and/or `overview.md` to match the actual state; do not re-run the spec cycle; list changed files per `R13-changed-files`
+  - No: proceed without changes
+
+---
+
+## Step 7: Documentation update
+
+**Executor:** `A1-drafter` (current context)
+
+- do not start Step 7 until **Result review** is marked (Step 6)
+- **Scope** — from subtasks and the files changed/added in this attempt, update the inception's `motivation.md` (attempts list, result) and any other affected docs
+- **Write** — align the markdown with the actual state after this attempt
+- set [V] "Documentation update" — fill the model name in brackets: `- [V] Documentation update [model-name]`
+- list changed files per `R13-changed-files`
+- continue with **Optional: Pattern extract** below (same run when closing via Steps 6–7)
+
+---
+
+## Optional: Pattern extract (after Step 7)
+
+**Executor:** `A1-drafter` (current context)
+
+After Step 7, optionally extract reusable approaches into **`spawn/rules/`** as project-standard candidates. Not a Status item.
+
+The agent filters candidates, presents the final list to the user in this run (no preliminary per-candidate questions), and waits for one per-candidate reply.
+
+**Order (mandatory):**
+
+1. **Discover** — find and filter reusable candidates (agent only).
+2. **Present** — show the filtered list to the user in one message right after Step 7 (title + one-line rationale + suggested scope per survivor).
+3. **Wait** — for the user's per-candidate reply.
+4. **Write** — only candidates the user accepted as Required or Optional.
+
+Skip the whole step only if the user already declined in this close-out. If Discover leaves zero candidates, say so briefly and stop.
+
+### Discover (before presenting)
+
+- review this attempt's changes, subtasks, and relevant context for reusable patterns
+- apply **Selection criteria** below; reject junk immediately
+- if zero candidates remain: say so briefly and stop — do not present; do not invent fillers
+
+### Selection criteria
+
+Propose only candidates that pass all of:
+
+- **Reusable** — useful beyond this single attempt
+- **Actionable** — can become a short rule an agent can follow
+- **Standard candidate** — plausible as a lasting convention
+- **Not already covered** — check **`spawn/rules/`**, **`spawn/navigation.yaml`**, and related reads for duplicates
+- **Pre-existing content OK** — a pattern already in use but not yet in rules remains valid
+- **Examples** — prefer short real excerpts; prose-only when necessary
+
+Reject immediately (do not offer):
+
+- task-specific wiring, ticket ids, temporary workarounds
+- restatements of existing rules or defaults
+- vague slogans without an enforceable rule
+- low-value or speculative ideas (junk)
+
+### Present (after Discover)
+
+- run only when Discover left one or more candidates
+- present the entire list in **one message**, right after Step 7 — **no `R9-ask`, no per-candidate tool questions, no pauses**
+- for each survivor: short title, one-line rationale, suggested scope (Required = `read-required`, Optional = `read-contextual`)
+- end the message with a reply request: per-candidate Required/Optional/Decline, or "decline all"
+- then wait — do not write rules, do not run `spawn refresh`, do not start the next task
+
+### Apply the user's answer (after the reply)
+
+- write only Required/Optional candidates
+- if all Declined (or "decline all"): write nothing
+- candidates not addressed default to **Decline** (do not invent consent)
+
+### Write
+
+1. Write under **`spawn/rules/`** (create the folder if missing).
+2. Prefer an existing **`spawn/rules/`** file on the same topic — merge or revise. If none fits, create a new kebab-case Markdown file.
+3. Prefer short examples in each rule when applicable (criterion 6).
+4. Add each file to **`spawn/navigation.yaml`** under **`read-required` → `rules`** or **`read-contextual` → `rules`** as the user chose. Row: **`path`** + short **`description`**. Never list the same path in both.
+5. Run exactly **`spawn refresh`** in the terminal.
+
+---
+
+## overview.md Template
 
 ```markdown
-{Ambient rules: ... | Ambient context: none}
+# Attempt {N}: {Title}
 
-# Task {N}: {Short title}
+## Source
+- Inception: {inception path or none}
 
-## Role
-You are an executor subagent (inc-executor). Role: `inc-executor`. Agent slug: `{agent-slug}` (one word — your goal) (`inc-rule-agent-slug`).
+## Status
+- [ ] Research [model]
+- [ ] Research review [model]
+- [ ] User research review
+- [ ] Spec drafting [model]
+- [ ] Spec self-review [model]
+- [ ] Spec review
+- [ ] Execution [model]
+- [ ] Execution self-review [model]
+- [ ] Result review
+- [ ] Documentation update [model]
 
-## Rules to follow
-{common-rules — executor variant: no subagents, list changed files}
-
-## Subagents you may call
-- None. You are an executor, you work independently (`inc-rule-subagent-depth`).
+## Outcome
+{Success | Partial | Failed — filled at Step 6 after the user's assessment.}
 
 ## Goal
-{One phrase — the task result.}
+{One concise sentence.}
 
-## Context
-{Context: what is already known, links to research, previous steps.}
+## Motivation
+{Why this attempt — from the user request, or from the clarification answer.}
 
-## Instructions
-{Clear step-by-step instructions. What exactly to do, in what order.}
+## Research summary
+{Synthesized research findings with links to research files in res/. Present only when the research phase (Step 1.0) ran.}
 
-## Constraints
-{Constraints: what not to do, boundaries, prohibitions.}
+## Subtasks
+{List of subtask files. Present only when the attempt has 2+ subtasks.}
+- {N}-{description}.md — {short description}
 
-## Acceptance criteria
-{Acceptance criteria — how to understand that the task is done correctly.}
+## Before → After
+### Before
+- {current state}
+### After
+- {desired state}
 
-## Ask if unclear
-{common-ask}
-
-{common-forbidden}
-
-## Output format
-Fill the report by the "Executor report (inc-executor)" template from `inceptions/templates/executor-report.md`.
+## Details
+{Clarifying details, examples, constraints.}
 ```
 
-### Direction line template for the coordinating researcher (inc-explorer)
+Omit `## Subtasks` if there is no decomposition (single-file attempt).
+
+---
+
+## Subtask file template
+
+Filename must match the subtask id from `## Subtasks` (e.g. `1-research-sources.md`). One file per subtask.
+
+````markdown
+# Subtask {N}: {Short title}
+
+Status: Not implemented
+Suggested model: {model}
+Used model:
+
+## Goal
+{One sentence — outcome of this subtask.}
+
+## Approach
+{Order of work, constraints, references to research if needed.}
+
+## Affected artifacts
+- `{path/relative/to/inception/root}`
+- `{...}` — {...}
+
+## Changes (before / after)
+
+### `{path/to/artifact.ext}` — {path plus named deliverable + what changes}
+
+**Before**
+```text
+{concrete minimal excerpt or exact lines, not vague prose}
+```
+{what this content is — behavior, not a repeat of the diff}
+
+**After**
+```text
+{replacement or new block — one-to-one with Before when editing existing text}
+```
+{what the new content is — behavior, not a repeat of the diff}
+
+## Additional actions
+{Optional: shell commands, manual verification steps, follow-up tasks, or other non–file-edit work for this subtask.}
+````
+
+---
+
+## motivation.md Template
 
 ```markdown
-{Ambient rules: ... | Ambient context: none}
+# Inception {N}: {Title}
 
-# Research direction
+## Motivation
+{Main motivation — why this inception, what problem it solves. 1-3 sentences.}
 
-## Role
-You are a coordinating researcher subagent (inc-explorer). Role: `inc-explorer`. Agent slug: `{agent-slug}` (one word — your goal) (`inc-rule-agent-slug`).
+## Start date
+{YYYY-MM-DD}
 
-## Rules to follow
-{common-rules — explorer variant: can create only inc-researcher, read-only except res/}
+## Status
+- [ ] In progress
+- [ ] Closed
 
-## Subagents you may call
-- `inc-researcher` — executing researcher: narrow single-line research, does not create subagents. Use to decompose research into independent sub-lines.
+## Attempts
+- {N}-{description} — {short attempt description}
+- {N}-{description} — ...
 
-## Line {N}: {line name}
+## Owner
+{who initiated / owner context}
 
-## Question
-{The specific question to answer.}
-
-## Hypotheses to check
-- {hypothesis 1}
-- {hypothesis 2}
-
-## Sources to explore
-- {web search | workspaces | git repositories | user data | ...}
-
-## Constraints
-{What not to touch, search boundaries.}
-
-## Ask if unclear
-{common-ask}
-
-{common-forbidden}
-
-## Research file (mandatory)
-Write the full research to the attempt's file: `res/{task-descr-slug}.{agent-slug}.md` (`inc-rule-res-file`).
-- `{task-descr-slug}` — slug of the direction/task (research topic).
-- `{agent-slug}` — your one-word goal slug.
-- The file is created in the attempt's `res/` folder (the attempt path is set by the parent in the context).
-- Do NOT duplicate the full inline report in the response — only a link to the file.
-
-## Output format
-Fill the report by the "Researcher report (inc-explorer / inc-researcher)" template from `inceptions/templates/researcher-report.md`.
+## Result (filled at closing)
+{VERY briefly: what was done, and a pointer to the successful attempt.}
 ```
 
-### Direction line template for the executing researcher (inc-researcher)
+---
+
+## Research file template
+
+Research files live in `res/{research}.md` within an attempt folder. `{research}` is a short slug of the research topic.
 
 ```markdown
-{Ambient rules: ... | Ambient context: none}
+# Research: {topic}
 
-# Research direction
+## Direction
+{The direction line that was set, or "free".}
 
-## Role
-You are an executing researcher subagent (inc-researcher). Role: `inc-researcher`. Agent slug: `{agent-slug}` (one word — your goal) (`inc-rule-agent-slug`).
+## Findings
+{Synthesized findings, facts, and classified importance.}
 
-## Rules to follow
-{common-rules — researcher variant: strictly no subagents, read-only except res/}
+## Sources
+{List of sources explored: web, docs, workspaces, git repositories, user data.}
 
-## Subagents you may call
-- None. You are an executing researcher, you work independently (`inc-rule-subagent-depth`).
-
-## Line {N}: {line name}
-
-## Question
-{The specific question to answer.}
-
-## Hypotheses to check
-- {hypothesis 1}
-- {hypothesis 2}
-
-## Sources to explore
-- {web search | workspaces | git repositories | user data | ...}
-
-## Constraints
-{What not to touch, search boundaries.}
-
-## Ask if unclear
-{common-ask}
-
-{common-forbidden}
-
-## Research file (mandatory)
-Write the full research to the attempt's file: `res/{task-descr-slug}.{agent-slug}.md` (`inc-rule-res-file`).
-- `{task-descr-slug}` — slug of the direction/task (research topic).
-- `{agent-slug}` — your one-word goal slug.
-- The file is created in the attempt's `res/` folder (the attempt path is set by the parent in the context).
-- Do NOT duplicate the full inline report in the response — only a link to the file.
-
-## Output format
-Fill the report by the "Researcher report (inc-explorer / inc-researcher)" template from `inceptions/templates/researcher-report.md`.
+## Gaps
+{What could not be found, what requires clarification.}
 ```
-
-When creating several researchers — set each its own line (e.g., 3 different lines for 3 subagents), or do not set a direction (be free).
-
-### Review request template for the reviewer (inc-reviewer) — input
-
-```markdown
-{Ambient rules: ... | Ambient context: none}
-
-# Review request: {review object}
-
-## Role
-You are a reviewer subagent (inc-reviewer). Role: `inc-reviewer`. Agent slug: `{agent-slug}` (one word — your goal) (`inc-rule-agent-slug`).
-
-## Rules to follow
-{common-rules — reviewer variant: can call researcher subagents, no deeper}
-
-## Subagents you may call
-- `inc-explorer` — coordinating researcher: searches for data, checks hypotheses, decomposes research into sub-lines. Can create only `inc-researcher`.
-- `inc-researcher` — executing researcher: narrow single-line research. Does not create subagents.
-
-## Object
-{What to review: research | tasks | completed work.}
-
-## Context
-{Context: links to research, spec, tasks, what is already done.}
-
-## Criteria
-{Review criteria: what to check, what to pay attention to.}
-
-## Output format
-Fill the report by the "Reviewer report (inc-reviewer)" template from `inceptions/templates/reviewer-report.md`.
-```
-
-### Final report template to the user
-
-Fill the report by the "Final report to the user" template from `inceptions/templates/final-report.md`.
-
-## Naming rules
-
-See `inc-rule-naming`.

@@ -6,7 +6,7 @@ Response template (Output format) that the `inc-reviewer` subagent fills in its 
 # Review report: {review object}
 
 ## Object
-{What was reviewed: research | tasks | completed work.}
+{What was reviewed: research | spec | completed work.}
 
 ## Verdict
 {Approved | Needs fixes | Rejected}

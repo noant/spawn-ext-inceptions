@@ -3,7 +3,7 @@
 Response template (Output format) that the `inc-executor` subagent fills in its final response to the parent.
 
 ```markdown
-# Report: Task {N} — {Short title}
+# Report: Subtask {N} — {Short title}
 
 ## Status
 {Done | Partial | Failed}

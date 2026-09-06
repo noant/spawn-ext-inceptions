@@ -11,11 +11,11 @@
 - [ ] Closed
 
 ## Attempts
-- try-1-New-{description} — {short attempt description}
-- try-2-... — ...
+- {N}-{description} — {short attempt description}
+- {N}-{description} — ...
 
 ## Owner
 {who initiated / owner context}
 
 ## Result (filled at closing)
-{VERY briefly: how it was implemented, what was done, and a pointer to the successful attempt.}
+{VERY briefly: what was done, and a pointer to the successful attempt.}

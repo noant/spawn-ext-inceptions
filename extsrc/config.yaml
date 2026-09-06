@@ -1,9 +1,9 @@
 schema: 1
 name: inceptions-method
-version: 0.7.4
+version: 0.8.0
 files:
   inceptions/main.md:
-    description: "Full inception-manager methodology — roles, rules, process, templates. Single source of truth (concise)."
+    description: "Full inceptions methodology — roles, rules, process, templates."
     mode: static
     globalRead: auto
     localRead: required
@@ -17,13 +17,13 @@ files:
     mode: artifact
     globalRead: no
     localRead: auto
-  inceptions/templates/technical-task.md:
-    description: "Template for the attempt's technical-task.md (strict)."
+  inceptions/templates/subtask.md:
+    description: "Template for the attempt's subtask files {N}-{description}.md (strict)."
     mode: artifact
     globalRead: no
     localRead: auto
-  inceptions/templates/result.md:
-    description: "Template for the attempt's result.md (strict)."
+  inceptions/templates/research.md:
+    description: "Template for the attempt's research files res/{research}.md."
     mode: artifact
     globalRead: no
     localRead: auto
@@ -58,11 +58,11 @@ folders:
 skills:
   inc-create.md:
     name: inc-create
-    description: "Entry point of the inceptions methodology. Request classification (question/initiative), language detection, clarification, creation of inception and attempt (motivation.md, overview.md, res/)."
+    description: "Entry point of the inceptions methodology. Request classification (question/initiative), clarification, creation of inception and attempt (motivation.md, overview.md, res/)."
     required-read:
       - inceptions/main.md
   inc-continue.md:
     name: inc-continue
-    description: "Determines where to continue work within an existing inception/attempt. Clarification of the active attempt, reading overview/technical-task/result, determining the current stage and next step."
+    description: "Determines where to continue work within an existing inception/attempt. Clarification of the active attempt, reading overview/subtasks, determining the current stage and next step."
     required-read:
       - inceptions/main.md

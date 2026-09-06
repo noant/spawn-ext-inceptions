@@ -1,29 +1,41 @@
-# Attempt try-{N}-{Level}: {Title}
+# Attempt {N}: {Title}
+
+## Source
+- Inception: {inception path or none}
 
 ## Status
 - [ ] Research [model]
 - [ ] Research review [model]
 - [ ] User research review
-- [ ] Task creation [model]
-- [ ] Task review [model]
-- [ ] User task review
+- [ ] Spec drafting [model]
+- [ ] Spec self-review [model]
+- [ ] Spec review
 - [ ] Execution [model]
-- [ ] Execution review [model]
-- [ ] User result review
-- [ ] Final report [model]
-- [ ] Documentation update & rules extract [model]
+- [ ] Execution self-review [model]
+- [ ] Result review
+- [ ] Documentation update [model]
+
+## Outcome
+{Success | Partial | Failed — filled at Step 6 after the user's assessment.}
 
 ## Goal
-{One phrase — the attempt's goal.}
+{One concise sentence.}
 
 ## Motivation
-{Why this attempt, what we are trying to achieve.}
+{Why this attempt — from the user request, or from the clarification answer.}
 
 ## Research summary
-{Synthesis of research results — what was found. Links to research files in res/: res/{task-descr-slug}.{agent-slug}.md.}
+{Synthesized research findings with links to research files in res/. Present only when the research phase (Step 1.0) ran.}
 
-## Technical task
-{Link to the technical-task.md file — high-level spec, tasks, execution mode.}
+## Subtasks
+{List of subtask files. Present only when the attempt has 2+ subtasks.}
+- {N}-{description}.md — {short description}
 
-## Result
-{Link to the result.md file — attempt outcome and notes.}
+## Before → After
+### Before
+- {current state}
+### After
+- {desired state}
+
+## Details
+{Clarifying details, examples, constraints.}

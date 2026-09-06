@@ -9,7 +9,7 @@ Response template (Output format) that the `inc-explorer` / `inc-researcher` sub
 {The direction line that was set, or "free".}
 
 ## Research file
-{Link to the research file: res/{task-descr-slug}.{agent-slug}.md}
+{Link to the research file: res/{research}.md}
 
 ## Summary
 {Brief summary (2-5 sentences) — what was found.}
