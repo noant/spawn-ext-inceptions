@@ -1,9 +1,9 @@
 schema: 1
 name: inceptions-method
-version: 0.7.2
+version: 0.7.3
 files:
   inceptions/main.md:
-    description: "Full inception-manager methodology — roles, rules, process, templates. Single source of truth."
+    description: "Full inception-manager methodology — roles, rules, process, templates. Single source of truth (concise)."
     mode: static
     globalRead: auto
     localRead: required
