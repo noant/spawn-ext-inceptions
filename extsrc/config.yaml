@@ -1,6 +1,6 @@
 schema: 1
 name: inceptions-method
-version: 0.8.0
+version: 0.8.1
 files:
   inceptions/main.md:
     description: "Full inceptions methodology — roles, rules, process, templates."
