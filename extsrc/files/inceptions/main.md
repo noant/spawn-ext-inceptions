@@ -144,6 +144,12 @@ _Subagent governance_
   - use line ranges (`from_line`/`to_line`) to point to the exact changed region when relevant
   - for git files pass the git session id; for ws docs omit it
   - never use navigate to read contents — only to show files in the UI
+- **`IR21-agents-md`**
+  - every sub-agent loads the repository `AGENTS.md` and any global/ambient rule set automatically
+  - do not restate rules already present in `AGENTS.md` (or other auto-loaded rule sets) inside the sub-agent prompt
+  - the sub-agent prompt adds only rules the sub-agent would not otherwise have: role-specific instructions and Ambient context (`IR15-ambient`)
+  - if a sub-agent must follow a rule already in `AGENTS.md`, reference it by label or name instead of copying its text
+  - existing rules may be extended (supplemented), never duplicated in full
 
 **Roles:**
 
@@ -184,7 +190,7 @@ Applies to every sub-agent launch for any role (`IA2-researcher`, `IA3-explorer`
 
 1. Resolve Ambient context per `IR15-ambient` (clarify if missing; do not ask when `Ambient context: none`).
 2. Put the resolved Ambient block at the very start of the sub-agent prompt (verbatim `Ambient rules: …` or `Ambient context: none`).
-3. Then add role-specific instructions (`IR12-model-line`, `IR13-changed-files`, Executor protocol, etc.).
+3. Then add role-specific instructions (`IR12-model-line`, `IR13-changed-files`, Executor protocol, etc.). Do not restate rules already in `AGENTS.md` — reference them by label per `IR21-agents-md`.
 4. Every agent that received Ambient context passes it to each child sub-agent unchanged — same wording, same order; do not drop, summarize, or rewrite.
 
 ---
