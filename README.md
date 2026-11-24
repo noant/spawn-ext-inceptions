@@ -19,7 +19,8 @@ The methodology instructs the LLM to work as a subagent manager to solve non-cod
 ## Structure
 
 ```
-inceptions/
+spawn/inceptions/
+  main.md, research.md, templates/  — methodology files (managed by the extension)
   {N}-{inception-slug}/          — inception
     motivation.md                — inception motivation (strict template)
     {N}-{description}/           — attempt

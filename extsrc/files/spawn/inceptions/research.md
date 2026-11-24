@@ -269,7 +269,7 @@ Verdict: ready / needs rework (with a list of concrete edits per point).
 
 ## 8. Result placement
 
-- **Full mode (within the inceptions process):** research files go to the attempt folder `inceptions/{N}-{inception-slug}/{N}-{description}/res/{research}.md`; deliverables are produced by executors per the subtask list.
+- **Full mode (within the inceptions process):** research files go to the attempt folder `spawn/inceptions/{N}-{inception-slug}/{N}-{description}/res/{research}.md`; deliverables are produced by executors per the subtask list.
 - **Standalone mode (inc-research, no inceptions process):**
   - `note` / single research result: `researches/{slug}.md`
   - multi-part works: `researches/{Title}/` with `00-overview.md` (plan and statuses) and `{NN}-{chapter-slug}.md` chapters

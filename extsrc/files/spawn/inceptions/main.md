@@ -7,13 +7,13 @@ The `inceptions` methodology instructs the LLM to work as a subagent manager to 
 - `spawn/inceptions/main.md` — this file.
 - `spawn/inceptions/research.md` — unified research methodology (principles, source priority, fact-list format, research roles and loop).
 - `spawn/inceptions/templates/` — artifact and response templates (see `## Templates`).
-- Methodology files (`spawn/inceptions/`) are managed by the Spawn extension; user inceptions live under `inceptions/` in the repository root.
-- `inceptions/{N}-{inception-slug}/` — inception folder. `{N}` is the inception number; `{inception-slug}` is a short descriptive name.
-- `inceptions/{N}-{inception-slug}/motivation.md` — inception motivation (required).
-- `inceptions/{N}-{inception-slug}/{N}-{description}/` — attempt folder. `{N}` is the attempt number within the inception; `{description}` is a short descriptive name.
-- `inceptions/{N}-{inception-slug}/{N}-{description}/overview.md` — attempt overview (required).
-- `inceptions/{N}-{inception-slug}/{N}-{description}/{N}-{description}.md` — subtask files (optional; required when the attempt has 2+ subtasks).
-- `inceptions/{N}-{inception-slug}/{N}-{description}/res/{research}.md` — research files (optional; created by research subagents).
+- Methodology files and user inceptions both live under `spawn/inceptions/`: methodology files are managed by the Spawn extension, user inception folders are owned by the project.
+- `spawn/inceptions/{N}-{inception-slug}/` — inception folder. `{N}` is the inception number; `{inception-slug}` is a short descriptive name.
+- `spawn/inceptions/{N}-{inception-slug}/motivation.md` — inception motivation (required).
+- `spawn/inceptions/{N}-{inception-slug}/{N}-{description}/` — attempt folder. `{N}` is the attempt number within the inception; `{description}` is a short descriptive name.
+- `spawn/inceptions/{N}-{inception-slug}/{N}-{description}/overview.md` — attempt overview (required).
+- `spawn/inceptions/{N}-{inception-slug}/{N}-{description}/{N}-{description}.md` — subtask files (optional; required when the attempt has 2+ subtasks).
+- `spawn/inceptions/{N}-{inception-slug}/{N}-{description}/res/{research}.md` — research files (optional; created by research subagents).
 
 **Embedded rules:**
 
@@ -22,18 +22,18 @@ Every rule has a stable label `[R{n}-{slug}]`.
 _Folder hygiene_
 
 - **`IR1-paths`**
-  - under `inceptions/`, only paths allowed by the Folder Structure are permitted
+  - under `spawn/inceptions/`, only paths allowed by the Folder Structure are permitted
   - no other files
 - **`IR2-no-clutter`**
-  - do not create READMEs or other extraneous docs under `inceptions/`
+  - do not create READMEs or other extraneous docs under `spawn/inceptions/`
   - special case of `IR1-paths`
 
 _Inception identification_
 
 - **`IR3-inception-num`**
-  - for numeric `{N}` in `inceptions/{N}-{inception-slug}/`: suggest the next number (`IR9-ask`)
+  - for numeric `{N}` in `spawn/inceptions/{N}-{inception-slug}/`: suggest the next number (`IR9-ask`)
   - wait for an explicit reply before creating the folder
-  - next number = highest existing `{N}` under `inceptions/` plus 1
+  - next number = highest existing `{N}` under `spawn/inceptions/` plus 1
 - **`IR4-attempt-num`**
   - for numeric `{N}` in `{N}-{description}/` (attempt): next number = highest existing `{N}` under the inception plus 1
   - no external tracker keys apply; attempts are numbered sequentially within an inception
@@ -121,7 +121,7 @@ _Subagent governance_
     - **[A] Question** — the user asks (wants an answer), not a "do" request
     - **[B] Initiative / task** — the user sets a task, an explicit "do", or asks to draft a spec
   - if unclear, ask via `IR9-ask` and wait
-  - [A] -> answer directly (light mode, no `inceptions/` artifacts); optionally launch `IA2-researcher`/`IA3-explorer` for read-only facts
+  - [A] -> answer directly (light mode, no `spawn/inceptions/` artifacts); optionally launch `IA2-researcher`/`IA3-explorer` for read-only facts
   - [B] -> proceed to Step 1 (Spec drafting)
 - **`IR17-subagent-depth`**
   - limits subagent nesting — who may create whom:
@@ -220,7 +220,7 @@ Mark each status [V] on completion. Prompt the user after steps 2, 5, and 6. Ste
 **Executor:** `IA1-drafter` (current context)
 
 0.1 Classify the request per `IR16-classify`:
-  - [A] Question -> answer directly (light mode); no `inceptions/` folder, no status checkboxes; optionally launch `IA2-researcher`/`IA3-explorer` (Subagent run protocol, `IR12-model-line`) for accurate facts per `spawn/inceptions/research.md`; if the answer reveals a real task, propose Step 1.
+  - [A] Question -> answer directly (light mode); no `spawn/inceptions/` folder, no status checkboxes; optionally launch `IA2-researcher`/`IA3-explorer` (Subagent run protocol, `IR12-model-line`) for accurate facts per `spawn/inceptions/research.md`; if the answer reveals a real task, propose Step 1.
   - [B] Initiative / task -> proceed to Step 1 (Spec drafting).
 0.2 If the type is unclear, ask via `IR9-ask` and wait.
 
@@ -270,7 +270,7 @@ Mark each status [V] on completion. Prompt the user after steps 2, 5, and 6. Ste
 - Put the chosen motivation in **`## Motivation`** (after **Goal**).
 
 1.3 **Overview**
-- `inceptions/{N}-{inception-slug}/{N}-{description}/overview.md` follows the overview.md template
+- `spawn/inceptions/{N}-{inception-slug}/{N}-{description}/overview.md` follows the overview.md template
 - sections through `## Details` (before/after and examples go there)
 - **Goal** = one sentence
 - **Motivation** immediately after **Goal**
@@ -334,7 +334,7 @@ Mark each status [V] on completion. Prompt the user after steps 2, 5, and 6. Ste
   - if "Spec review" is not yet marked, set [V] "Spec review" automatically (implementation command implies approval)
   - if this chat already completed Steps 1–2 for the task:
     - launch the Steps 4–5 `IA6-coordinator` sub-agent (see Executor above) and stop coordinating inline
-    - include in prompt: **Subagent run protocol** (`IR15-ambient`); follow Steps 4–5 for `inceptions/{N}-{inception-slug}/{N}-{description}/` as `IA6-coordinator`; the line from `IR12-model-line`
+    - include in prompt: **Subagent run protocol** (`IR15-ambient`); follow Steps 4–5 for `spawn/inceptions/{N}-{inception-slug}/{N}-{description}/` as `IA6-coordinator`; the line from `IR12-model-line`
   - **MANDATORY!** launch an `IA5-executor` sub-agent for each subtask — do NOT execute inline; no exceptions, even if a subtask seems trivial
     - prefer subtask `Suggested model`: pass as Task/sub-agent `model` when supported; else name in prompt and use nearest slug
     - Executor prompt must include: **Subagent run protocol** (`IR15-ambient`), line from `IR12-model-line`, changed-files list per `IR13-changed-files`, **Executor protocol** below

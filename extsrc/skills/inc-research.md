@@ -5,7 +5,7 @@ description: Standalone research via the inceptions research methodology — fac
 
 # inc-research
 
-Standalone research entry point of the `inceptions` extension. Pure research without inceptions artifacts (`inceptions/` folder, overview, subtasks) and without the full process.
+Standalone research entry point of the `inceptions` extension. Pure research without inceptions artifacts (`spawn/inceptions/` folder, overview, subtasks) and without the full process.
 
 Research methodology: `spawn/inceptions/research.md`. Read it fully and follow it in **standalone mode**.
 
@@ -29,5 +29,5 @@ Answers a research request with a fact-list (facts | source | confidence, gaps, 
 
 ## Limits
 
-- No `inceptions/` artifacts are created (no inception/attempt folders).
+- No `spawn/inceptions/` attempt artifacts are created (no inception/attempt folders).
 - Max 3 waves, max 4 search iterations per question, gaps recorded honestly (all per `spawn/inceptions/research.md`).
