@@ -1,17 +1,12 @@
 schema: 1
 name: inceptions-method
-version: 0.9.0
+version: 0.9.1
 files:
   inceptions/main.md:
     description: "Full inceptions methodology — roles, rules, process, templates."
     mode: static
     globalRead: auto
     localRead: required
-  inceptions/research.md:
-    description: "Unified research methodology — research principles, fact-lists, educational writing, subagent scheme, prompt templates, quality checklists, result placement."
-    mode: static
-    globalRead: auto
-    localRead: auto
   inceptions/templates/motivation.md:
     description: "Template for the inception's motivation.md (strict)."
     mode: artifact
@@ -68,10 +63,7 @@ skills:
       - inceptions/main.md
   inc-research.md:
     name: inc-research
-    description: "Standalone research via the inceptions research methodology — fact-lists with sources, no full inception process. Use for research/find/compare/collect-facts requests that do not need spec drafting."
-    required-read:
-      - inceptions/research.md
-      - inceptions/main.md
+    description: "Standalone research via the inceptions research methodology — fact-lists with sources, educational content production, no full inception process. Use for research/find/compare/collect-facts/tutorial requests that do not need spec drafting."
   inc-continue.md:
     name: inc-continue
     description: "Determines where to continue work within an existing inception/attempt. Clarification of the active attempt, reading overview/subtasks, determining the current stage and next step."
