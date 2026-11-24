@@ -21,7 +21,7 @@ If the request is explicitly about a book — `book-create` can be used; otherwi
    - `book` — multi-part work (textbook, monograph, reference).
 3. Language (`language`, default Russian).
 4. Audience and starting level: `beginner` / `developer` / `expert`.
-5. Research depth: `docs-only` (Context7) / `web` (+ search) / `deep` (+ repository examples).
+5. Research depth: `docs-only` (documentation services) / `web` (+ web search) / `deep` (+ repository examples).
 6. Theory/practice ratio: `theory-heavy` / `balanced` / `practice-first`.
 7. Context binding: `generic` or project-bound (read hla-files and notes before research).
 8. Methodic flags (for tutorial/book): exercises, control questions, capstone project, mastery checklist, glossary.
@@ -41,13 +41,13 @@ If a parameter is not specified and it affects the result — ask the user (`IR9
 
 ### 2.2 Source priority
 
-1. Context7 (`resolve-library-id` -> `query-docs`) — library/framework documentation.
-2. Official documentation and changelog (fetchWebContent).
-3. Repositories (fetchGithubReadme, code examples).
-4. Web search (`search`, bing/duckduckgo) — fresh guides, comparisons, known issues.
-5. Secondary sources (articles, StackOverflow) — only with cross-checking.
+1. Library/framework documentation services — curated API docs for known technologies.
+2. Official documentation and changelogs (direct page fetching).
+3. Repositories (README/code fetching, code examples).
+4. Web search (multi-engine) — fresh guides, comparisons, known issues.
+5. Secondary sources (articles, Q&A sites) — only with cross-checking.
 
-Workspace and git repositories count as primary sources for project-internal questions (ws_read/ws_search, git_read/git_file_grep).
+Workspace and git repositories count as primary sources for project-internal questions (workspace document reads/search, repository file reads/search).
 
 ### 2.3 Fact-list (format)
 
@@ -139,7 +139,7 @@ E3. Research review (coordinator/reviewer): gaps -> targeted follow-up (max 2 it
 E4. Drafts (writer x N): fact-list + formatting rules + format skeleton.
 E5. Draft review (reviewer): checklists from section 6.
 E6. Rework and assembly (writer/assembler).
-E7. Acceptance (coordinator -> user): navigate_user; with staged — next step is the user's choice.
+E7. Acceptance (coordinator -> user): show the result to the user via the platform's navigation tool; with staged — next step is the user's choice.
 ```
 
 In full mode E1-E3 correspond to Step 1.0 (research loop, waves up to 3), E4-E6 to Steps 4-5.
@@ -148,7 +148,7 @@ In full mode E1-E3 correspond to Step 1.0 (research loop, waves up to 3), E4-E6 
 
 ```
 Ambient rules:
-1) Work in workspace docs; use ws_write/ws_read for artifacts under {output_dir}.
+1) Work in the docs workspace of your platform; use its document read/write tools for artifacts under {output_dir}.
 2) Language: {language}. ASCII in schemas and code.
 ```
 If the subagent works with a git repository — add the repository key and session_id. Resolve per the Subagent run protocol (`IR15-ambient`, `IR12-model-line` from `inceptions/main.md`).
@@ -174,7 +174,7 @@ Do not write the text itself, only the plan.
 ```
 You are the researcher for "{title}". Topic/section: {section_title}.
 Questions to cover: {bullet list from the plan}.
-Tools: search (bing/duckduckgo), resolve-library-id -> query-docs, fetchWebContent/fetchGithubReadme.
+Tools: use the search tooling available on your platform — documentation services, web search, page/repository fetching.
 Limit: no more than 4 search iterations per question; after 4-5 consecutive failed searches — record the gap and stop.
 
 {Ambient rules}
@@ -278,7 +278,7 @@ Verdict: ready / needs rework (with a list of concrete edits per point).
 
 ## 9. Output
 
-- Documents are written via `ws_write` (or the executor protocol in full mode); statuses reflected in `00-overview.md` (for book).
-- `navigate_user` to the finished result.
+- Documents are written via the platform's document write tool (or the executor protocol in full mode); statuses reflected in `00-overview.md` (for book).
+- Show the finished result to the user via the platform's navigation tool.
 - With `staged` — after each part ask the user: continue / edits / change focus.
 - Offer (do not perform voluntarily) pushing into a git notes repository if one exists.
