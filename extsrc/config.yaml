@@ -10,7 +10,7 @@ files:
   inceptions/research.md:
     description: "Unified research methodology — research principles, fact-lists, educational writing, subagent scheme, prompt templates, quality checklists, result placement."
     mode: static
-    globalRead: no
+    globalRead: auto
     localRead: auto
   inceptions/templates/motivation.md:
     description: "Template for the inception's motivation.md (strict)."
