@@ -5,6 +5,7 @@ The `inceptions` methodology instructs the LLM to work as a subagent manager to 
 ## Folder Structure
 
 - `inceptions/main.md` — this file.
+- `inceptions/research.md` — unified research methodology (principles, source priority, fact-list format, research roles and loop).
 - `inceptions/templates/` — artifact and response templates (see `## Templates`).
 - `inceptions/{N}-{inception-slug}/` — inception folder. `{N}` is the inception number; `{inception-slug}` is a short descriptive name.
 - `inceptions/{N}-{inception-slug}/motivation.md` — inception motivation (required).
@@ -218,7 +219,7 @@ Mark each status [V] on completion. Prompt the user after steps 2, 5, and 6. Ste
 **Executor:** `IA1-drafter` (current context)
 
 0.1 Classify the request per `IR16-classify`:
-  - [A] Question -> answer directly (light mode); no `inceptions/` folder, no status checkboxes; optionally launch `IA2-researcher`/`IA3-explorer` (Subagent run protocol, `IR12-model-line`) for accurate facts per the `inc-research` skill; if the answer reveals a real task, propose Step 1.
+  - [A] Question -> answer directly (light mode); no `inceptions/` folder, no status checkboxes; optionally launch `IA2-researcher`/`IA3-explorer` (Subagent run protocol, `IR12-model-line`) for accurate facts per `inceptions/research.md`; if the answer reveals a real task, propose Step 1.
   - [B] Initiative / task -> proceed to Step 1 (Spec drafting).
 0.2 If the type is unclear, ask via `IR9-ask` and wait.
 
@@ -228,7 +229,7 @@ Mark each status [V] on completion. Prompt the user after steps 2, 5, and 6. Ste
 
 **Executor:** `IA1-drafter`
 
-1.0 **Research** — run a research loop before drafting the spec when the subject is not yet clear. Skip for trivial tasks. Follow the research methodology embedded in the `inc-research` skill (principles, source priority, fact-list format, limits, quality checklist).
+1.0 **Research** — run a research loop before drafting the spec when the subject is not yet clear. Skip for trivial tasks. Follow `inceptions/research.md` (principles, source priority, fact-list format, limits, quality checklist).
 
 1.0.1 **Research depth selection** — ask the user (`IR9-ask`) whether research is needed and at what depth:
   - [inline] — no subagents; the drafter researches in-chat (trivial, one-off questions)
