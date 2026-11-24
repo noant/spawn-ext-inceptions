@@ -4,7 +4,7 @@ Unified research methodology of the `inceptions` extension: research and product
 
 Two usage modes:
 
-- **Full mode** — Step 1.0 of `inceptions/main.md` (research before spec drafting) and type [A] question answering (Step 0.1). Research files go to the attempt folder `res/`.
+- **Full mode** — Step 1.0 of `spawn/inceptions/main.md` (research before spec drafting) and type [A] question answering (Step 0.1). Research files go to the attempt folder `res/`.
 - **Standalone mode** — via the `inc-research` skill: pure research without the full inceptions process. Results go to the `researches/` folder.
 
 Relation to other skills:
@@ -151,7 +151,7 @@ Ambient rules:
 1) Work in the docs workspace of your platform; use its document read/write tools for artifacts under {output_dir}.
 2) Language: {language}. ASCII in schemas and code.
 ```
-If the subagent works with a git repository — add the repository key and session_id. Resolve per the Subagent run protocol (`IR15-ambient`, `IR12-model-line` from `inceptions/main.md`).
+If the subagent works with a git repository — add the repository key and session_id. Resolve per the Subagent run protocol (`IR15-ambient`, `IR12-model-line` from `spawn/inceptions/main.md`).
 
 ## 5. Prompt templates
 

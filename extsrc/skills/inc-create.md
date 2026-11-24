@@ -7,7 +7,7 @@ description: Entry point of the inceptions methodology. Request classification (
 
 Entry point of the inceptions methodology. Role: `IA1-drafter` (main chat).
 
-Full methodology: `inceptions/main.md`. Follow it.
+Full methodology: `spawn/inceptions/main.md`. Follow it.
 
 ## What it does
 
@@ -15,7 +15,7 @@ Classifies the user request and routes it: answers a question (light mode), or d
 
 ## Order
 
-1. Read `inceptions/main.md` fully.
+1. Read `spawn/inceptions/main.md` fully.
 2. Classify the request (Step 0) per `IR16-classify`: **[A] Question** (asks) or **[B] Initiative/task** (explicit "do" / research).
 3. If unclear — ask clarification (`IR9-ask`).
 4. If the request relates to an existing inception in `inceptions/` — propose to continue (use `inc-continue` to determine where).
@@ -30,5 +30,5 @@ When research is needed (type A answer; type B research loop), launch a subagent
 
 ## Templates
 
-- Artifacts: `inceptions/templates/motivation.md`, `overview.md`, `subtask.md`, `research.md`, `rule.md`.
-- Subagent responses: `inceptions/templates/executor-report.md`, `researcher-report.md`, `reviewer-report.md`, `final-report.md`.
+- Artifacts: `spawn/inceptions/templates/motivation.md`, `overview.md`, `subtask.md`, `research.md`, `rule.md`.
+- Subagent responses: `spawn/inceptions/templates/executor-report.md`, `researcher-report.md`, `reviewer-report.md`, `final-report.md`.

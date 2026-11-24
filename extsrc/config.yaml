@@ -1,58 +1,58 @@
 schema: 1
 name: inceptions-method
-version: 0.9.1
+version: 0.9.2
 files:
-  inceptions/main.md:
+  spawn/inceptions/main.md:
     description: "Full inceptions methodology — roles, rules, process, templates."
     mode: static
     globalRead: auto
     localRead: required
-  inceptions/research.md:
+  spawn/inceptions/research.md:
     description: "Unified research methodology — research principles, fact-lists, educational writing, subagent scheme, prompt templates, quality checklists, result placement."
     mode: static
     globalRead: no
     localRead: auto
-  inceptions/templates/motivation.md:
+  spawn/inceptions/templates/motivation.md:
     description: "Template for the inception's motivation.md (strict)."
     mode: artifact
     globalRead: no
     localRead: auto
-  inceptions/templates/overview.md:
+  spawn/inceptions/templates/overview.md:
     description: "Template for the attempt's overview.md (strict)."
     mode: artifact
     globalRead: no
     localRead: auto
-  inceptions/templates/subtask.md:
+  spawn/inceptions/templates/subtask.md:
     description: "Template for the attempt's subtask files {N}-{description}.md (strict)."
     mode: artifact
     globalRead: no
     localRead: auto
-  inceptions/templates/research.md:
+  spawn/inceptions/templates/research.md:
     description: "Template for the attempt's research files res/{research}.md."
     mode: artifact
     globalRead: no
     localRead: auto
-  inceptions/templates/rule.md:
+  spawn/inceptions/templates/rule.md:
     description: "Template for the extracted rule file spawn/rules/{SLUG}-{N}-{description}.md."
     mode: artifact
     globalRead: no
     localRead: auto
-  inceptions/templates/executor-report.md:
+  spawn/inceptions/templates/executor-report.md:
     description: "Response template (Output format) of the inc-executor subagent."
     mode: static
     globalRead: no
     localRead: auto
-  inceptions/templates/researcher-report.md:
+  spawn/inceptions/templates/researcher-report.md:
     description: "Response template (Output format) of the inc-explorer / inc-researcher subagent."
     mode: static
     globalRead: no
     localRead: auto
-  inceptions/templates/reviewer-report.md:
+  spawn/inceptions/templates/reviewer-report.md:
     description: "Response template (Output format) of the inc-reviewer subagent."
     mode: static
     globalRead: no
     localRead: auto
-  inceptions/templates/final-report.md:
+  spawn/inceptions/templates/final-report.md:
     description: "Response template (Output format) of the final report to the user."
     mode: static
     globalRead: no
@@ -65,15 +65,15 @@ skills:
     name: inc-create
     description: "Entry point of the inceptions methodology. Request classification (question/initiative), clarification, creation of inception and attempt (motivation.md, overview.md, res/)."
     required-read:
-      - inceptions/main.md
+      - spawn/inceptions/main.md
   inc-research.md:
     name: inc-research
     description: "Standalone research via the inceptions research methodology — fact-lists with sources, no full inception process. Use for research/find/compare/collect-facts requests that do not need spec drafting."
     required-read:
-      - inceptions/research.md
-      - inceptions/main.md
+      - spawn/inceptions/research.md
+      - spawn/inceptions/main.md
   inc-continue.md:
     name: inc-continue
     description: "Determines where to continue work within an existing inception/attempt. Clarification of the active attempt, reading overview/subtasks, determining the current stage and next step."
     required-read:
-      - inceptions/main.md
+      - spawn/inceptions/main.md

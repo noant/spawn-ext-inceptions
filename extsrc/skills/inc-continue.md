@@ -7,7 +7,7 @@ description: Determines where to continue work within an existing inception/atte
 
 Determines where to continue work within an existing inception. Role: `IA1-drafter` (main chat).
 
-Full methodology: `inceptions/main.md`. Follow it.
+Full methodology: `spawn/inceptions/main.md`. Follow it.
 
 ## What it does
 
@@ -39,13 +39,13 @@ By the `[V]` statuses in `overview.md`, determine at which stage the work stoppe
 
 ## Order
 
-1. Read `inceptions/main.md` fully.
+1. Read `spawn/inceptions/main.md` fully.
 2. Clarify the active attempt (see above).
 3. Determine the current stage by statuses (see above).
 4. Tell the user where the work stopped and what is proposed next.
-5. Propose to continue from the needed step (per `inceptions/main.md`).
+5. Propose to continue from the needed step (per `spawn/inceptions/main.md`).
 
 ## Templates
 
-- Artifacts: `inceptions/templates/overview.md`, `subtask.md`, `motivation.md`.
-- Subagent responses: `inceptions/templates/executor-report.md`, `researcher-report.md`, `reviewer-report.md`, `final-report.md`.
+- Artifacts: `spawn/inceptions/templates/overview.md`, `subtask.md`, `motivation.md`.
+- Subagent responses: `spawn/inceptions/templates/executor-report.md`, `researcher-report.md`, `reviewer-report.md`, `final-report.md`.
