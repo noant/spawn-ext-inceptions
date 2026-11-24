@@ -10,7 +10,9 @@ The methodology instructs the LLM to work as a subagent manager to solve non-cod
 
 - `extsrc/skills/inc-create.md` — entry point skill (request classification, inception/attempt creation).
 - `extsrc/skills/inc-continue.md` — determines where to continue work within an existing inception.
+- `extsrc/skills/inc-research.md` — standalone research skill (fact-lists, no full process).
 - `extsrc/files/inceptions/main.md` — full methodology (roles, rules, process, templates).
+- `extsrc/files/inceptions/research.md` — unified research methodology (research, fact-lists, educational writing, checklists, placement).
 - `extsrc/files/inceptions/templates/` — artifact templates (motivation, overview, subtask, research, rule, executor-report, researcher-report, reviewer-report, final-report).
 - Extracted inception rules are stored in `spawn/rules/` (artifact, standard Spawn mechanism).
 
